@@ -1,0 +1,13 @@
+.vs/
+.idea/
+bin/
+obj/
+dist/
+*.user
+*.suo
+*.tmp
+*.bak
+presets.cfg
+presets.cfg.bak
+Thumbs.db
+Desktop.ini

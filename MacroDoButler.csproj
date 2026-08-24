@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Macro do Butler</AssemblyName>
+    <RootNamespace>MacroDoButler</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>assets\MacroDoButler.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets\MacroDoButler.png" LogicalName="MacroDoButler.Brand" />
+    <EmbeddedResource Include="assets\MacroDoButler_Watermark.png" LogicalName="MacroDoButler.Watermark" />
+  </ItemGroup>
+</Project>

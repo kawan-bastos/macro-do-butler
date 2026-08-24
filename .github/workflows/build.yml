@@ -1,0 +1,31 @@
+name: Build Windows
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restaurar
+        run: msbuild MacroDoButler.csproj /t:Restore /p:Configuration=Release
+
+      - name: Compilar
+        run: msbuild MacroDoButler.csproj /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Publicar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: macro-do-butler-windows
+          path: bin/Release/net48/Macro do Butler.exe
+          if-no-files-found: error
