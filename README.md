@@ -43,6 +43,31 @@ No PowerShell, execute:
 
 O resultado será criado em `dist\Macro do Butler.exe`.
 
+## Estrutura do código
+
+```text
+src/
+├── Program.cs
+├── Forms/
+│   └── MainForm.cs
+├── Models/
+│   ├── MovementSettings.cs
+│   └── Preset.cs
+├── Native/
+│   └── NativeMethods.cs
+├── Services/
+│   ├── InputService.cs
+│   └── PresetService.cs
+└── UI/
+    └── Theme.cs
+```
+
+- `Forms`: interface, eventos e apresentação dos dados.
+- `Models`: estruturas de dados sem dependência da interface.
+- `Services`: persistência dos presets e processamento de entrada.
+- `Native`: chamadas isoladas à API do Windows.
+- `UI`: paleta, criação de controles e carregamento dos recursos visuais.
+
 ## GitHub Actions
 
 O workflow em `.github/workflows/build.yml` compila o projeto automaticamente. O executável fica disponível como artefato chamado `macro-do-butler-windows` em cada execução do workflow.
