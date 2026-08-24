@@ -12,20 +12,34 @@ jobs:
 
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Restaurar
         run: msbuild MacroDoButler.csproj /t:Restore /p:Configuration=Release
 
       - name: Compilar
-        run: msbuild MacroDoButler.csproj /p:Configuration=Release /p:Platform="Any CPU"
+        shell: pwsh
+        run: |
+          $outputDirectory = Join-Path $env:GITHUB_WORKSPACE "dist"
+          msbuild MacroDoButler.csproj `
+            /p:Configuration=Release `
+            /p:Platform="Any CPU" `
+            /p:AppendTargetFrameworkToOutputPath=false `
+            /p:OutputPath="$outputDirectory\"
+
+          $executable = Join-Path $outputDirectory "Macro do Butler.exe"
+          if (-not (Test-Path -LiteralPath $executable)) {
+            throw "Executável não foi criado em: $executable"
+          }
+
+          Get-Item -LiteralPath $executable
 
       - name: Publicar artefato
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: macro-do-butler-windows
-          path: bin/Release/net48/Macro do Butler.exe
+          path: dist/Macro do Butler.exe
           if-no-files-found: error
