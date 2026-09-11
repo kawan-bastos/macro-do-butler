@@ -4,7 +4,10 @@ Aplicativo Windows para configurar movimentos relativos do mouse com perfis pers
 
 ## Recursos
 
-- Interface escura em vermelho e preto.
+- Interface WPF escura em vermelho e preto.
+- Fundo animado por GPU com gradientes e formas geométricas discretas.
+- Cartões, campos e sliders totalmente personalizados, sem componentes brancos.
+- Janela sem borda padrão, com título e controles próprios.
 - Presets salvos localmente.
 - Valores separados para configuração primária e secundária.
 - Ajuste vertical de 0 a 10.000 pixels por segundo.
@@ -46,10 +49,11 @@ O resultado será criado em `dist\Macro do Butler.exe`.
 ## Estrutura do código
 
 ```text
+App.xaml
+MainWindow.xaml
+Themes/
+└── Controls.xaml
 src/
-├── Program.cs
-├── Forms/
-│   └── MainForm.cs
 ├── Models/
 │   ├── MovementSettings.cs
 │   └── Preset.cs
@@ -58,15 +62,15 @@ src/
 ├── Services/
 │   ├── InputService.cs
 │   └── PresetService.cs
-└── UI/
-    └── Theme.cs
+└── Properties/
+    └── AssemblyInfo.cs
 ```
 
-- `Forms`: interface, eventos e apresentação dos dados.
+- `MainWindow.xaml`: interface WPF e animações visuais.
+- `Themes`: estilos reutilizáveis de cartões, botões, campos e sliders.
 - `Models`: estruturas de dados sem dependência da interface.
 - `Services`: persistência dos presets e processamento de entrada.
 - `Native`: chamadas isoladas à API do Windows.
-- `UI`: paleta, criação de controles e carregamento dos recursos visuais.
 
 ## GitHub Actions
 

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net48</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
     <AssemblyName>Macro do Butler</AssemblyName>
     <RootNamespace>MacroDoButler</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="assets\MacroDoButler.png" LogicalName="MacroDoButler.Brand" />
-    <EmbeddedResource Include="assets\MacroDoButler_Watermark.png" LogicalName="MacroDoButler.Watermark" />
+    <Resource Include="assets\MacroDoButler.png" />
   </ItemGroup>
 </Project>
