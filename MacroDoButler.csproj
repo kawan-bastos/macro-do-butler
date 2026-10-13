@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="assets\MacroDoButler.png" />
   </ItemGroup>
 </Project>

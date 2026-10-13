@@ -1,7 +1,7 @@
 <Window x:Class="MacroDoButler.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Macro Do Butler" Width="980" Height="720" MinWidth="900" MinHeight="650"
+        Title="Macro Do Butler" Width="1180" Height="800" MinWidth="1000" MinHeight="700"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
         StateChanged="Window_StateChanged" Closed="Window_Closed">
@@ -63,24 +63,40 @@
                     </Grid>
                 </Border>
 
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <Grid Margin="28,24,28,28">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="310" /><ColumnDefinition Width="18" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
+                <Grid Grid.Row="1" Margin="28,18,28,20">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="350" /><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
+                    <StackPanel>
                             <Border Style="{StaticResource CardStyle}">
                                 <StackPanel>
                                     <TextBlock Text="PRESETS" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="12" />
                                     <TextBlock Text="Gerencie suas configurações" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,18" />
-                                    <TextBlock Text="Preset salvo" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,0,0,7" />
-                                    <ComboBox x:Name="PresetList" Style="{StaticResource ComboStyle}" SelectionChanged="PresetList_SelectionChanged" />
-                                    <TextBlock Text="Nome para salvar" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,14,0,7" />
+                                    <TextBlock Text="Jogo" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,0,0,5" />
+                                    <TextBlock x:Name="GameEmptyText" Text="Nenhum jogo cadastrado" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="2,0,0,3" Visibility="Collapsed" />
+                                    <ComboBox x:Name="GameSelector" Style="{StaticResource ComboStyle}" SelectionChanged="Organization_SelectionChanged" />
+                                    <TextBlock Text="Preset" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,9,0,5" />
+                                    <TextBlock x:Name="PresetEmptyText" Text="Nenhum preset neste jogo" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="2,0,0,3" Visibility="Collapsed" />
+                                    <ComboBox x:Name="PresetSelector" Style="{StaticResource ComboStyle}" SelectionChanged="PresetSelector_SelectionChanged" />
+                                    <TextBlock Text="Nome do preset" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,12,0,7" />
                                     <TextBox x:Name="PresetName" Style="{StaticResource FieldStyle}" />
                                     <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
                                         <Button Content="SALVAR" Style="{StaticResource PrimaryButtonStyle}" Click="SavePreset_Click" />
                                         <Button Grid.Column="2" Content="EXCLUIR" Style="{StaticResource SecondaryButtonStyle}" Click="DeletePreset_Click" />
                                     </Grid>
+                                    <Button Content="EDITAR JOGO / PRESETS" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="EditCategory_Click" />
                                     <TextBlock x:Name="FeedbackText" Foreground="#7EE2A8" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="TRANSFERÊNCIA E BACKUP" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="12" />
+                                    <TextBlock Text="Arquivos JSON e pontos de restauração" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,14" />
+                                    <Button Content="EXPORTAR PRESETS" Style="{StaticResource SecondaryButtonStyle}" Click="ExportPresets_Click" ToolTip="Salvar uma cópia de todos os presets em JSON." />
+                                    <Button Content="IMPORTAR PRESETS" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="ImportPresets_Click" ToolTip="Importar arquivos JSON ou CFG legados." />
+                                    <Button Content="CRIAR BACKUP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="CreateBackup_Click" ToolTip="Criar um backup do arquivo atual de presets." />
+                                    <Button Content="RESTAURAR BACKUP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="RestoreBackup_Click" ToolTip="Selecionar e restaurar um backup anterior." />
+                                    <TextBlock x:Name="TransferFeedbackText" Foreground="#7EE2A8" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Border>
 
@@ -108,9 +124,10 @@
                                     <Button x:Name="WeaponButton" Content="USAR SECUNDÁRIA · F2" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" Click="ToggleWeapon_Click" />
                                 </StackPanel>
                             </Border>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
+                    </StackPanel>
+                    </ScrollViewer>
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
+                        <StackPanel>
                             <Border x:Name="PrimaryCard" Style="{StaticResource CardStyle}">
                                 <StackPanel>
                                     <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
@@ -156,8 +173,8 @@
                                 </Grid>
                             </Border>
                         </StackPanel>
-                    </Grid>
-                </ScrollViewer>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </Grid>
     </Border>

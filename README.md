@@ -1,85 +1,57 @@
 # Macro do Butler
 
-Aplicativo Windows para configurar movimentos relativos do mouse com perfis persistentes para duas configurações (primária e secundária).
+Aplicativo Windows em WPF para configurar movimentos relativos do mouse com presets organizados por jogo e nome. Requer .NET Framework 4.8.
 
-## Recursos
+## Organização de presets
 
-- Interface WPF escura em vermelho e preto.
-- Fundo animado por GPU com gradientes e formas geométricas discretas.
-- Cartões, campos e sliders totalmente personalizados, sem componentes brancos.
-- Janela sem borda padrão, com título e controles próprios.
-- Presets salvos localmente.
-- Valores separados para configuração primária e secundária.
-- Ajuste vertical de 0 a 10.000 pixels por segundo.
-- Ajuste lateral de -5.000 a 5.000 pixels por segundo.
-- Ícone e marca visual incorporados ao executável.
-- Aplicativo independente de softwares de fabricantes de mouse.
+Na área **Presets**, escolha um jogo e um preset. O campo **Nome do preset** é texto livre, não uma lista. Ao trocar o nome e clicar em **Salvar**, um novo preset é criado no jogo selecionado com os valores atuais; ao manter o nome do preset carregado, seus valores são atualizados.
+
+- **Editar jogo / presets** permite criar jogos e selecionar vários presets legados ainda sem jogo para adicioná-los juntos ao jogo escolhido.
+- Presets atribuídos a outro jogo não aparecem na lista de presets disponíveis para movimentação.
+- **Excluir** pede confirmação com jogo e nome do preset e cria backup antes da remoção.
+- O nome do preset é universal: pode ser um operador, uma arma ou qualquer outro perfil que faça sentido para o jogo.
+
+O macro continua mantendo valores para as configurações primária e secundária. F2 alterna qual conjunto de valores está ativo.
+
+## Dados, compatibilidade e backups
+
+O arquivo ativo é `presets.json`, ao lado do executável. O JSON versionado (formato 2) guarda jogos, nome do preset, valores, requisito do botão direito e datas. A gravação usa arquivo temporário e substituição atômica. A pasta `backups\` guarda até 10 cópias recentes do arquivo ativo.
+
+Na primeira inicialização sem JSON, o programa lê `presets.cfg`, interpreta os formatos CFG de cinco e sete campos e converte cada registro para o jogo **Não categorizado**, usando o nome legado como nome do preset. Antes de criar o JSON, copia o CFG original para `presets.cfg.migration.bak`. O arquivo CFG original permanece intacto. Os presets antigos aparecem como não atribuídos e podem ser adicionados em grupo ao jogo escolhido.
+
+Use **Exportar presets** para salvar um JSON completo. **Importar presets** aceita JSON e CFG antigo, valida os registros e oferece substituir ou ignorar combinações jogo/nome já existentes; cria backup antes de aplicar. **Restaurar backup** valida o arquivo escolhido e salva o estado atual antes da restauração.
 
 ## Atalhos
 
 | Tecla | Ação |
 |---|---|
-| `F1` | Ligar ou desligar |
-| `F2` | Alternar entre configuração primária e secundária |
+| `F1` | Ligar ou desligar o macro |
+| `F2` | Alternar entre primária e secundária |
 | `F12` | Encerrar o aplicativo |
 
-O movimento configurado é aplicado enquanto o botão esquerdo estiver pressionado. Opcionalmente, o programa pode exigir que o botão direito também esteja pressionado.
+O movimento é aplicado enquanto o botão esquerdo está pressionado. É possível exigir também o botão direito.
 
-## Presets
+## Limites
 
-Os presets são armazenados em `presets.cfg`, ao lado do executável. Esse arquivo está ignorado pelo Git para evitar publicar configurações pessoais.
-
-Presets antigos com uma única configuração continuam compatíveis. Ao serem salvos novamente, passam a armazenar os valores da configuração secundária.
+- Força vertical: 0 a 10.000 px/s.
+- Correção lateral: -5.000 a 5.000 px/s.
+- Intervalo: 2 a 50 ms.
+- Jogo e nome do preset são obrigatórios.
 
 ## Compilar no Windows
 
-Requisitos:
+Com Visual Studio Build Tools com suporte a .NET Framework 4.8 ou Visual Studio 2022, execute `.\build.ps1` no PowerShell. O executável é criado em `dist\Macro do Butler.exe`.
 
-- Windows 10 ou 11.
-- Visual Studio Build Tools com suporte ao .NET Framework 4.8, ou Visual Studio 2022.
+## Estrutura
 
-No PowerShell, execute:
+- `MainWindow.xaml` e `MainWindow.xaml.cs`: interface, seletores e integração do macro.
+- `src/Models/Preset.cs`: modelo hierárquico e metadados.
+- `src/Services/PresetService.cs`: leitura, migração e persistência JSON/CFG.
+- `src/Services/PresetOrganizationService.cs`: operações de organização, pesquisa e validação.
+- `src/Services/PresetBackupService.cs`: cópia, listagem e restauração de backups.
+- `src/Services/PresetTransferService.cs`: importação e exportação.
+- `src/Services/PresetDialogs.cs`: diálogos de categorias e duplicidades.
 
-```powershell
-.\build.ps1
-```
+Serviços específicos de migração e validação de domínio ficam em `PresetOrganizationService.cs`; a leitura legada é coordenada por `PresetService` antes de habilitar gravações no JSON.
 
-O resultado será criado em `dist\Macro do Butler.exe`.
-
-## Estrutura do código
-
-```text
-App.xaml
-MainWindow.xaml
-Themes/
-└── Controls.xaml
-src/
-├── Models/
-│   ├── MovementSettings.cs
-│   └── Preset.cs
-├── Native/
-│   └── NativeMethods.cs
-├── Services/
-│   ├── InputService.cs
-│   └── PresetService.cs
-└── Properties/
-    └── AssemblyInfo.cs
-```
-
-- `MainWindow.xaml`: interface WPF e animações visuais.
-- `Themes`: estilos reutilizáveis de cartões, botões, campos e sliders.
-- `Models`: estruturas de dados sem dependência da interface.
-- `Services`: persistência dos presets e processamento de entrada.
-- `Native`: chamadas isoladas à API do Windows.
-
-## GitHub Actions
-
-O workflow em `.github/workflows/build.yml` compila o projeto automaticamente. O executável fica disponível como artefato chamado `macro-do-butler-windows` em cada execução do workflow.
-
-## Uso responsável
-
-Use automações somente em aplicativos e ambientes que permitam entradas simuladas. Alguns programas podem ignorar esse tipo de entrada. Este projeto não inclui mecanismos para contornar proteções, sistemas antitrapaça ou restrições de terceiros.
-
-## Licença
-
-Distribuído sob a licença MIT. Consulte [LICENSE](LICENSE).
+Use automações somente em aplicativos e ambientes que permitam entradas simuladas. O projeto não implementa mecanismos para contornar proteções ou restrições de terceiros.
