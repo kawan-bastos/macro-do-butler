@@ -8,6 +8,8 @@ using System.Windows.Media.Animation;
 using System.IO;
 using Microsoft.Win32;
 using System.Linq;
+using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace MacroDoButler
 {
@@ -18,8 +20,18 @@ namespace MacroDoButler
         private readonly PresetBackupService backupService;
         private readonly PresetTransferService transferService;
         private readonly PresetOrganizationService organizationService = new PresetOrganizationService();
+        private readonly HotkeyStorageService hotkeyStorage;
+        private MacroSettingsStorageService macroSettingsStorage;
+        private HotkeyService hotkeyService;
+        private HotkeySettings hotkeySettings;
+        private string capturingAction;
+        private string capturedHotkey;
+        private DispatcherTimer hotkeyMessageTimer;
+        private TextBlock hotkeyMessageTarget;
+        private string hotkeyMessageText;
         private Preset selectedPreset;
         private bool updatingSelectors;
+        private bool loadingMacroSettings;
         private readonly string[] selectorEmptyText = { "Nenhum jogo cadastrado", "Nenhum preset neste jogo" };
         private Storyboard backgroundAnimation;
         private volatile bool enabled;
@@ -28,6 +40,13 @@ namespace MacroDoButler
         public MainWindow()
         {
             InitializeComponent();
+            hotkeyStorage = new HotkeyStorageService(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + System.IO.Path.DirectorySeparatorChar + "MacroDoButler");
+            string hotkeyWarning; hotkeySettings=hotkeyStorage.Load(out hotkeyWarning);
+            macroSettingsStorage = new MacroSettingsStorageService(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + System.IO.Path.DirectorySeparatorChar + "MacroDoButler");
+            loadingMacroSettings=true;
+            IntervalSlider.Value=macroSettingsStorage.LoadInterval();
+            IntervalText.Text=((int)IntervalSlider.Value).ToString();
+            loadingMacroSettings=false;
             presetService = new PresetService(AppDomain.CurrentDomain.BaseDirectory);
             backupService = new PresetBackupService(presetService.FilePath);
             transferService = new PresetTransferService(backupService);
@@ -35,13 +54,123 @@ namespace MacroDoButler
             inputService.ToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(Toggle)); };
             inputService.WeaponToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(ToggleWeapon)); };
             inputService.ExitRequested += delegate { Dispatcher.BeginInvoke(new Action(Close)); };
+            Loaded += delegate { RefreshHotkeyUi(); if(!string.IsNullOrEmpty(hotkeyWarning)) { HotkeyStatus.Text=hotkeyWarning; HotkeyStatus.Foreground=Brushes.Orange; } };
 
             IList<Preset> initialPresets = presetService.LoadAll();
             RefreshOrganization(initialPresets.FirstOrDefault());
-            if (initialPresets.Count == 0) { PrimaryVerticalSlider.Value=350; PrimaryHorizontalSlider.Value=0; SecondaryVerticalSlider.Value=0; SecondaryHorizontalSlider.Value=0; IntervalSlider.Value=7; RequireRight.IsChecked=true; }
+            if (initialPresets.Count == 0) { PrimaryVerticalSlider.Value=350; PrimaryHorizontalSlider.Value=0; SecondaryVerticalSlider.Value=0; SecondaryHorizontalSlider.Value=0; RequireRight.IsChecked=true; }
             UpdateStatus();
             UpdateWeaponStatus();
             inputService.Start();
+        }
+
+        private void Window_SourceInitialized(object sender, EventArgs e)
+        {
+            hotkeyService=new HotkeyService(new WindowInteropHelper(this).Handle);
+            hotkeyService.ActionRequested+=HotkeyService_ActionRequested;
+            string error=hotkeyService.Register(hotkeySettings);
+            bool usingF12Fallback=string.Equals(hotkeySettings.ExitApplication,"F12",StringComparison.OrdinalIgnoreCase);
+            inputService.EnableFallbackF12(usingF12Fallback);
+            if(usingF12Fallback&&error!=null&&error.StartsWith("Fechar aplicativo:",StringComparison.Ordinal)) error=null;
+            if(error!=null) Dispatcher.BeginInvoke(new Action(delegate { HotkeyStatus.Text=error; HotkeyStatus.Foreground=Brushes.Orange; }));
+        }
+
+        private void HotkeyService_ActionRequested(string action)
+        {
+            if(action=="ToggleMacro") Toggle(); else if(action=="SwitchWeapon") ToggleWeapon(); else if(action=="ExitApplication") Close(); else if(action=="ShowWindow") ToggleWindowVisibility();
+        }
+
+        private void ToggleWindowVisibility()
+        {
+            if(WindowState==WindowState.Minimized)
+            {
+                Show(); WindowState=WindowState.Normal; Activate();
+            }
+            else WindowState=WindowState.Minimized;
+        }
+
+        private sealed class HotkeyRow
+        {
+            public string Action { get; set; } public string Label { get; set; } public string Description { get; set; } public string Value { get; set; }
+        }
+        private void RefreshHotkeyUi()
+        {
+            if(HotkeyItems==null)return;
+            var rows=new[]{new HotkeyRow{Action="ToggleMacro",Label="Ligar/desligar macro",Description="Controla o estado ativo do macro",Value=hotkeySettings.ToggleMacro},new HotkeyRow{Action="SwitchWeapon",Label="Alternar arma",Description="Alterna entre primária e secundária",Value=hotkeySettings.SwitchWeapon},new HotkeyRow{Action="ExitApplication",Label="Fechar aplicativo",Description="Encerra o Macro do Butler",Value=hotkeySettings.ExitApplication},new HotkeyRow{Action="ShowWindow",Label="Mostrar janela",Description="Minimiza e restaura a interface",Value=hotkeySettings.ShowWindow}};
+            HotkeyItems.ItemsSource=rows;
+            HotkeyItems.ItemTemplate=CreateHotkeyTemplate();
+            ToggleButton.Content="LIGAR · "+hotkeySettings.ToggleMacro; WeaponButton.Content=(secondaryActive?"USAR PRIMÁRIA · ":"USAR SECUNDÁRIA · ")+hotkeySettings.SwitchWeapon;
+            HotkeySummary.Text=hotkeySettings.ToggleMacro+" liga/desliga  •  "+hotkeySettings.SwitchWeapon+" alterna  •  "+hotkeySettings.ExitApplication+" encerra";
+        }
+        private DataTemplate CreateHotkeyTemplate()
+        {
+            var template=new DataTemplate(typeof(HotkeyRow));
+            var root=new FrameworkElementFactory(typeof(DockPanel)); root.SetValue(DockPanel.LastChildFillProperty,true); root.SetValue(FrameworkElement.MarginProperty,new Thickness(0,0,0,14));
+            var details=new FrameworkElementFactory(typeof(StackPanel)); details.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center); details.SetValue(FrameworkElement.MarginProperty,new Thickness(0,0,18,0));
+            var title=new FrameworkElementFactory(typeof(TextBlock)); title.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding("Label")); title.SetValue(TextBlock.FontWeightProperty,FontWeights.SemiBold); title.SetValue(TextBlock.FontSizeProperty,13.0); details.AppendChild(title);
+            var desc=new FrameworkElementFactory(typeof(TextBlock)); desc.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding("Description")); desc.SetValue(TextBlock.ForegroundProperty,(Brush)FindResource("MutedBrush")); desc.SetValue(TextBlock.FontSizeProperty,11.0); desc.SetValue(TextBlock.MarginProperty,new Thickness(0,4,0,0)); details.AppendChild(desc);
+            var value=new FrameworkElementFactory(typeof(TextBlock)); value.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding("Value"){TargetNullValue="DESATIVADO",FallbackValue="DESATIVADO"}); value.SetValue(TextBlock.ForegroundProperty,Brushes.White); value.SetValue(TextBlock.FontSizeProperty,12.0); value.SetValue(TextBlock.MarginProperty,new Thickness(0,8,0,0)); details.AppendChild(value);
+            var change=new FrameworkElementFactory(typeof(Button)); change.SetValue(Button.ContentProperty,"ALTERAR"); change.SetValue(Button.StyleProperty,FindResource("SecondaryButtonStyle")); change.SetValue(Button.WidthProperty,100.0); change.SetValue(Button.HeightProperty,40.0); change.SetValue(DockPanel.DockProperty,Dock.Right); change.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center); change.AddHandler(Button.ClickEvent,new RoutedEventHandler(ChangeHotkey_Click)); root.AppendChild(change);
+            root.AppendChild(details); template.VisualTree=root; return template;
+        }
+        private void ChangeHotkey_Click(object sender,RoutedEventArgs e)
+        {
+            var button=sender as Button; var row=button==null?null:button.DataContext as HotkeyRow; if(row==null)return;
+            capturingAction=row.Action; capturedHotkey=null; HotkeyCaptureStatus.Text="Pressione a combinação desejada para "+row.Label+". ENTER confirma, ESC cancela."; Focus(); Keyboard.Focus(this);
+        }
+        private void Window_PreviewKeyDown(object sender,KeyEventArgs e)
+        {
+            if(capturingAction==null)return; e.Handled=true; Key key;
+            if(!HotkeyParser.TryKeyFromEvent(e,out key))return;
+            if(key==Key.Escape){CancelCapture();return;}
+            if(key==Key.Enter){if(!string.IsNullOrEmpty(capturedHotkey))ApplyCapturedHotkey();else HotkeyCaptureStatus.Text="Pressione uma tecla principal junto dos modificadores.";return;}
+            if(key==Key.Back||key==Key.Delete){capturedHotkey=null;HotkeyCaptureStatus.Text="Atalho desativado; ENTER confirma.";return;}
+            if(!HotkeyValidator.IsAllowed(key)){HotkeyCaptureStatus.Text="Essa tecla não pode ser usada como atalho.";return;}
+            capturedHotkey=HotkeyParser.Format(HotkeyParser.CurrentModifiers(),key); HotkeyCaptureStatus.Text=capturedHotkey+" — pressione ENTER para confirmar ou continue capturando.";
+        }
+        private void CancelCapture(){capturingAction=null;capturedHotkey=null;HotkeyCaptureStatus.Text="Captura cancelada.";Keyboard.ClearFocus();}
+        private void ApplyCapturedHotkey()
+        {
+            HotkeySettings candidate=hotkeySettings.Copy(); SetHotkeyValue(candidate,capturingAction,capturedHotkey);
+            string validation=HotkeyValidator.Validate(candidate); if(validation!=null){HotkeyCaptureStatus.Text=validation;return;}
+            string conflict=FindHotkeyConflict(candidate,capturingAction); if(conflict!=null){if(MessageBox.Show(this,"Esse atalho já é usado por “"+conflict+"”. Deseja substituir o atalho anterior?","Conflito de atalhos",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return; SetHotkeyValue(candidate,conflict,null);}
+            string error=hotkeyService==null?"A janela ainda não está pronta.":hotkeyService.TryReplace(hotkeySettings,candidate);
+            if(error!=null){HotkeyCaptureStatus.Text=error;return;}
+            try{hotkeyStorage.Save(candidate);}catch(Exception ex){string rollback=hotkeyService.TryReplace(candidate,hotkeySettings);HotkeyCaptureStatus.Text="Não foi possível salvar hotkeys.json: "+ex.Message+(rollback==null?"":" "+rollback);return;}
+            hotkeySettings=candidate; capturingAction=null; capturedHotkey=null; RefreshHotkeyUi(); HotkeyCaptureStatus.Text="Atalho atualizado com sucesso.";
+            if(!string.IsNullOrEmpty(hotkeyService.LastRegistrationWarning)){HotkeyStatus.Text=hotkeyService.LastRegistrationWarning;HotkeyStatus.Foreground=Brushes.Orange;}
+            else {HotkeyStatus.Text=string.Empty;}
+            inputService.EnableFallbackF12(string.Equals(hotkeySettings.ExitApplication,"F12",StringComparison.OrdinalIgnoreCase));
+            if(string.IsNullOrEmpty(hotkeyService.LastRegistrationWarning))ShowTransientHotkeyMessage(HotkeyCaptureStatus,"Atalho atualizado com sucesso.",Brushes.LightGreen);
+        }
+        private static string FindHotkeyConflict(HotkeySettings s,string action)
+        {
+            string value=GetHotkeyValue(s,action); HotkeyBinding target; if(!HotkeyParser.TryParse(value,out target))return null;
+            string[] actions={"ToggleMacro","SwitchWeapon","ExitApplication","ShowWindow"}; string[] labels={"Ligar/desligar macro","Alternar arma","Fechar aplicativo","Mostrar janela"};
+            for(int i=0;i<actions.Length;i++)if(actions[i]!=action){HotkeyBinding other;if(HotkeyParser.TryParse(GetHotkeyValue(s,actions[i]),out other)&&target.Equals(other))return labels[i];} return null;
+        }
+        private static string GetHotkeyValue(HotkeySettings s,string action){if(action=="ToggleMacro")return s.ToggleMacro;if(action=="SwitchWeapon")return s.SwitchWeapon;if(action=="ExitApplication")return s.ExitApplication;return s.ShowWindow;}
+        private static void SetHotkeyValue(HotkeySettings s,string action,string value){if(action=="ToggleMacro")s.ToggleMacro=value;else if(action=="SwitchWeapon")s.SwitchWeapon=value;else if(action=="ExitApplication")s.ExitApplication=value;else s.ShowWindow=value;}
+        private void RestoreHotkeys_Click(object sender,RoutedEventArgs e)
+        {
+            if(MessageBox.Show(this,"Restaurar F1, F2 e F12 e remover os atalhos opcionais?","Restaurar padrões",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
+            HotkeySettings defaults=HotkeySettings.Defaults(); string error=hotkeyService.TryReplace(hotkeySettings,defaults); if(error!=null){HotkeyStatus.Text=error;HotkeyStatus.Foreground=Brushes.Orange;return;}
+            try{hotkeyStorage.Save(defaults);}catch(Exception ex){string rollback=hotkeyService.TryReplace(defaults,hotkeySettings);HotkeyStatus.Text="Não foi possível salvar: "+ex.Message+(rollback==null?"":" "+rollback);return;} hotkeySettings=defaults; RefreshHotkeyUi(); inputService.EnableFallbackF12(true); HotkeyStatus.Text=string.Empty; ShowTransientHotkeyMessage(HotkeyCaptureStatus,"Padrões restaurados.",Brushes.LightGreen);
+        }
+
+        private void ShowTransientHotkeyMessage(TextBlock target,string message,Brush color)
+        {
+            if(hotkeyMessageTimer==null)
+            {
+                hotkeyMessageTimer=new DispatcherTimer { Interval=TimeSpan.FromSeconds(2.5) };
+                hotkeyMessageTimer.Tick+=delegate
+                {
+                    hotkeyMessageTimer.Stop();
+                    if(hotkeyMessageTarget!=null&&hotkeyMessageTarget.Text==hotkeyMessageText)hotkeyMessageTarget.Text=string.Empty;
+                    hotkeyMessageTarget=null; hotkeyMessageText=null;
+                };
+            }
+            hotkeyMessageTimer.Stop(); hotkeyMessageTarget=target; hotkeyMessageText=message; target.Text=message; target.Foreground=color; hotkeyMessageTimer.Start();
         }
 
         protected override void OnContentRendered(EventArgs e)
@@ -193,7 +322,7 @@ namespace MacroDoButler
             updatingSelectors = false;
             PrimaryVerticalSlider.Value = Clamp(preset.PrimaryVertical, 0, 10000); PrimaryHorizontalSlider.Value = Clamp(preset.PrimaryHorizontal, -5000, 5000);
             SecondaryVerticalSlider.Value = Clamp(preset.SecondaryVertical, 0, 10000); SecondaryHorizontalSlider.Value = Clamp(preset.SecondaryHorizontal, -5000, 5000);
-            IntervalSlider.Value = Clamp(preset.IntervalMilliseconds, 2, 50); RequireRight.IsChecked = preset.RequireRightButton;
+            RequireRight.IsChecked = preset.RequireRightButton;
             PresetName.Text = preset.Name; secondaryActive = preset.WeaponSlot == WeaponSlot.Secondary; UpdateWeaponStatus(); ShowFeedback("Preset carregado no macro.", true);
         }
         private void Organization_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -270,6 +399,21 @@ namespace MacroDoButler
                 case "Interval": target = IntervalText; break;
             }
             if (target != null) target.Text = ((int)slider.Value).ToString();
+            if (slider.Tag as string == "Interval" && !loadingMacroSettings && macroSettingsStorage != null) SaveMacroSettings();
+        }
+
+        private void SaveMacroSettings()
+        {
+            try
+            {
+                macroSettingsStorage.SaveInterval((int)IntervalSlider.Value);
+                MacroSettingsStatus.Text=string.Empty;
+            }
+            catch(Exception exception)
+            {
+                MacroSettingsStatus.Text="Não foi possível salvar o intervalo geral: "+exception.Message;
+                MacroSettingsStatus.Foreground=Brushes.Orange;
+            }
         }
 
         private void NumericText_LostFocus(object sender, RoutedEventArgs e)
@@ -351,13 +495,21 @@ namespace MacroDoButler
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); }
         private void Minimize_Click(object sender, RoutedEventArgs e) { WindowState = WindowState.Minimized; }
         private void Close_Click(object sender, RoutedEventArgs e) { Close(); }
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            bool showSettings=SettingsPage.Visibility!=Visibility.Visible;
+            MainPage.Visibility=showSettings?Visibility.Collapsed:Visibility.Visible;
+            SettingsPage.Visibility=showSettings?Visibility.Visible:Visibility.Collapsed;
+            if(!showSettings&&capturingAction!=null)CancelCapture();
+            if(showSettings)HotkeyItems.Focus();
+        }
         private void Window_StateChanged(object sender, EventArgs e)
         {
             if (backgroundAnimation == null) return;
             if (WindowState == WindowState.Minimized) backgroundAnimation.Pause(this);
             else backgroundAnimation.Resume(this);
         }
-        private void Window_Closed(object sender, EventArgs e) { inputService.Dispose(); }
+        private void Window_Closed(object sender, EventArgs e) { capturingAction=null; if(hotkeyMessageTimer!=null)hotkeyMessageTimer.Stop(); if(hotkeyService!=null)hotkeyService.Dispose(); inputService.Dispose(); }
 
         private static int Clamp(int value, int minimum, int maximum) { return Math.Max(minimum, Math.Min(maximum, value)); }
         private static SolidColorBrush BrushOf(string color) { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)); }

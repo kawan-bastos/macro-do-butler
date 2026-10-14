@@ -29,13 +29,17 @@ Use **Exportar presets** para salvar um JSON completo. **Importar presets** acei
 | `F2` | Alternar entre primária e secundária |
 | `F12` | Encerrar o aplicativo |
 
+Os atalhos são globais e continuam ativos com a janela minimizada ou outro aplicativo em primeiro plano. Não dependem do Logitech G HUB. Clique na engrenagem para abrir **Configurações** e, em **Atalhos**, clique em **Alterar**, pressione a tecla ou combinação e confirme com **Enter**. Use **Esc** para cancelar; **Backspace** ou **Delete** desativa o atalho opcional de mostrar a janela. Os atalhos principais são obrigatórios. Combinações repetidas são bloqueadas e o aplicativo informa quando o Windows não consegue registrar uma combinação. O atalho opcional **Mostrar janela** alterna entre minimizar e restaurar a interface. **Restaurar padrões** retorna F1/F2/F12 e desativa esse atalho opcional.
+
+As preferências ficam em `%LOCALAPPDATA%\MacroDoButler\hotkeys.json`, separadas dos presets. Se o arquivo estiver inválido, os padrões são carregados e o arquivo é mantido para recuperação.
+
 O movimento é aplicado enquanto o botão esquerdo está pressionado. É possível exigir também o botão direito.
 
 ## Limites
 
 - Força vertical: 0 a 10.000 px/s.
 - Correção lateral: -5.000 a 5.000 px/s.
-- Intervalo: 2 a 50 ms.
+- Intervalo geral: 2 a 50 ms, compartilhado por todos os presets.
 - Jogo e nome do preset são obrigatórios.
 
 ## Compilar no Windows
@@ -50,6 +54,7 @@ Com Visual Studio Build Tools com suporte a .NET Framework 4.8 ou Visual Studio 
 - `src/Services/PresetOrganizationService.cs`: operações de organização, pesquisa e validação.
 - `src/Services/PresetBackupService.cs`: cópia, listagem e restauração de backups.
 - `src/Services/PresetTransferService.cs`: importação e exportação.
+- `src/Services/HotkeyService.cs`, `HotkeyParser.cs` e `HotkeyStorageService.cs`: registro global por `RegisterHotKey`, conversão, validação e persistência dos atalhos.
 - `src/Services/PresetDialogs.cs`: diálogos de categorias e duplicidades.
 
 Serviços específicos de migração e validação de domínio ficam em `PresetOrganizationService.cs`; a leitura legada é coordenada por `PresetService` antes de habilitar gravações no JSON.

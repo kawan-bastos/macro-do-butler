@@ -12,4 +12,12 @@ Copy-Item `
     -Destination (Join-Path $destination "Macro do Butler.exe") `
     -Force
 
+$configuration = Join-Path $projectDirectory "bin\Release\net48\Macro do Butler.exe.config"
+if (Test-Path -LiteralPath $configuration) {
+    Copy-Item `
+        -LiteralPath $configuration `
+        -Destination (Join-Path $destination "Macro do Butler.exe.config") `
+        -Force
+}
+
 Write-Host "Executável criado em: $destination\Macro do Butler.exe"

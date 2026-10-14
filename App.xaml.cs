@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Windows;
 
@@ -19,7 +20,12 @@ namespace MacroDoButler
             }
 
             base.OnStartup(e);
-            new MainWindow().Show();
+            try { new MainWindow().Show(); }
+            catch (Exception exception)
+            {
+                MessageBox.Show("O Macro do Butler não conseguiu iniciar: " + exception.Message, "Falha ao iniciar", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(-1);
+            }
         }
     }
 }

@@ -3,6 +3,8 @@
 bin/
 obj/
 dist/
+build-check/
+publish/
 *.user
 *.suo
 *.tmp

@@ -7,6 +7,7 @@ internal sealed class InputService : IDisposable
     private readonly Func<MovementSettings> settingsProvider;
     private readonly Thread worker;
     private volatile bool stopping;
+    private volatile bool fallbackF12;
     internal event Action ToggleRequested;
     internal event Action WeaponToggleRequested;
     internal event Action ExitRequested;
@@ -17,23 +18,23 @@ internal sealed class InputService : IDisposable
         worker = new Thread(Run) { IsBackground = true, Name = "Movimento" };
     }
     internal void Start() { worker.Start(); }
+    internal void EnableFallbackF12(bool enabled) { fallbackF12 = enabled; }
+    internal void RaiseToggleRequested() { Raise(ToggleRequested); }
+    internal void RaiseWeaponToggleRequested() { Raise(WeaponToggleRequested); }
     public void Dispose() { stopping = true; }
 
     private void Run()
     {
         double remainderX = 0, remainderY = 0;
         var watch = Stopwatch.StartNew(); long previousTick = watch.ElapsedTicks;
-        bool oldF1 = false, oldF2 = false, oldF12 = false;
+        bool oldF12=false;
         while (!stopping)
         {
             MovementSettings settings = SafeSettings();
             Thread.Sleep(settings.IntervalMilliseconds);
-            bool f1 = NativeMethods.IsKeyDown(NativeMethods.F1), f2 = NativeMethods.IsKeyDown(NativeMethods.F2), f12 = NativeMethods.IsKeyDown(NativeMethods.F12);
-            if (f1 && !oldF1) Raise(ToggleRequested);
-            if (f2 && !oldF2) Raise(WeaponToggleRequested);
-            if (f12 && !oldF12) Raise(ExitRequested);
-            oldF1 = f1; oldF2 = f2; oldF12 = f12;
-
+            bool f12=fallbackF12&&NativeMethods.IsKeyDown(NativeMethods.F12);
+            if(f12&&!oldF12)Raise(ExitRequested);
+            oldF12=f12;
             long currentTick = watch.ElapsedTicks;
             double elapsed = (currentTick - previousTick) / (double)Stopwatch.Frequency;
             previousTick = currentTick;
