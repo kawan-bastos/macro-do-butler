@@ -1,62 +1,77 @@
 # Macro do Butler
 
-Aplicativo Windows em WPF para configurar movimentos relativos do mouse com presets organizados por jogo e nome. Requer .NET Framework 4.8.
+Aplicativo desktop para Windows, feito em WPF com .NET Framework 4.8. O macro aplica movimentos relativos do mouse usando perfis configuráveis e atalhos globais.
 
-## Organização de presets
+## Começar
 
-Na área **Presets**, escolha um jogo e um preset. O campo **Nome do preset** é texto livre, não uma lista. Ao trocar o nome e clicar em **Salvar**, um novo preset é criado no jogo selecionado com os valores atuais; ao manter o nome do preset carregado, seus valores são atualizados.
+Na janela principal, escolha um jogo e um preset. Os controles exibem os valores do perfil ativo. Clique em **Salvar** para criar ou atualizar o preset; **Excluir** remove o perfil selecionado após confirmação.
 
-- **Editar jogo / presets** permite criar jogos e selecionar vários presets legados ainda sem jogo para adicioná-los juntos ao jogo escolhido.
-- Presets atribuídos a outro jogo não aparecem na lista de presets disponíveis para movimentação.
-- **Excluir** pede confirmação com jogo e nome do preset e cria backup antes da remoção.
-- O nome do preset é universal: pode ser um operador, uma arma ou qualquer outro perfil que faça sentido para o jogo.
+Os perfis mantêm valores separados para arma primária e secundária. Use o botão de alternância ou `F2` para escolher qual conjunto está ativo. Os ícones `?` ao lado dos controles mostram explicações ao passar o mouse.
 
-O macro continua mantendo valores para as configurações primária e secundária. F2 alterna qual conjunto de valores está ativo.
+## Configurações
 
-## Dados, compatibilidade e backups
+Abra a engrenagem no topo da janela. As opções são organizadas em três abas:
 
-O arquivo ativo é `presets.json`, ao lado do executável. O JSON versionado (formato 2) guarda jogos, nome do preset, valores, requisito do botão direito e datas. A gravação usa arquivo temporário e substituição atômica. A pasta `backups\` guarda até 10 cópias recentes do arquivo ativo.
+- **Atalhos:** altera os atalhos globais e restaura os valores padrão.
+- **Macro:** configura o intervalo de atualização e se o botão direito também precisa estar pressionado.
+- **Dados e backup:** importa, exporta e restaura presets.
 
-Na primeira inicialização sem JSON, o programa lê `presets.cfg`, interpreta os formatos CFG de cinco e sete campos e converte cada registro para o jogo **Não categorizado**, usando o nome legado como nome do preset. Antes de criar o JSON, copia o CFG original para `presets.cfg.migration.bak`. O arquivo CFG original permanece intacto. Os presets antigos aparecem como não atribuídos e podem ser adicionados em grupo ao jogo escolhido.
+### Intervalo global
 
-Use **Exportar presets** para salvar um JSON completo. **Importar presets** aceita JSON e CFG antigo, valida os registros e oferece substituir ou ignorar combinações jogo/nome já existentes; cria backup antes de aplicar. **Restaurar backup** valida o arquivo escolhido e salva o estado atual antes da restauração.
+O intervalo é compartilhado por todos os presets e permanece selecionado ao trocar de perfil. O valor permitido é de 2 a 50 ms; o padrão é 7 ms. A preferência é salva em `%LOCALAPPDATA%\MacroDoButler\macro-settings.json`.
 
-## Atalhos
+### Atalhos globais
 
-| Tecla | Ação |
+| Padrão | Ação |
 |---|---|
 | `F1` | Ligar ou desligar o macro |
-| `F2` | Alternar entre primária e secundária |
-| `F12` | Encerrar o aplicativo |
+| `F2` | Alternar entre arma primária e secundária |
+| `F12` | Fechar o aplicativo |
+| Desativado | Mostrar ou minimizar a janela |
 
-Os atalhos são globais e continuam ativos com a janela minimizada ou outro aplicativo em primeiro plano. Não dependem do Logitech G HUB. Clique na engrenagem para abrir **Configurações** e, em **Atalhos**, clique em **Alterar**, pressione a tecla ou combinação e confirme com **Enter**. Use **Esc** para cancelar; **Backspace** ou **Delete** desativa o atalho opcional de mostrar a janela. Os atalhos principais são obrigatórios. Combinações repetidas são bloqueadas e o aplicativo informa quando o Windows não consegue registrar uma combinação. O atalho opcional **Mostrar janela** alterna entre minimizar e restaurar a interface. **Restaurar padrões** retorna F1/F2/F12 e desativa esse atalho opcional.
+Os atalhos continuam ativos quando a janela está minimizada ou outro aplicativo está em primeiro plano; não dependem do Logitech G HUB. Em **Atalhos**, clique em **Alterar**, pressione a combinação desejada e confirme com **Enter**. `Esc` cancela a captura. `Backspace` ou `Delete` desativa o atalho opcional de mostrar a janela. Os três atalhos principais são obrigatórios. Se uma combinação já estiver em uso por outra ação, o aplicativo oferece substituir o atalho anterior; também avisa quando o Windows não consegue registrar uma combinação.
 
-As preferências ficam em `%LOCALAPPDATA%\MacroDoButler\hotkeys.json`, separadas dos presets. Se o arquivo estiver inválido, os padrões são carregados e o arquivo é mantido para recuperação.
+As preferências ficam em `%LOCALAPPDATA%\MacroDoButler\hotkeys.json`. Se o Windows impedir a gravação nesse local, o aplicativo tenta salvar o arquivo ao lado do executável. Se um arquivo existente estiver inválido, os padrões são carregados e o arquivo é preservado.
 
-O movimento é aplicado enquanto o botão esquerdo está pressionado. É possível exigir também o botão direito.
+## Ajustes do macro
 
-## Limites
+- **Força vertical:** velocidade do movimento vertical, de 0 a 10.000 px/s.
+- **Correção lateral:** movimento horizontal, de -5.000 a 5.000 px/s; valores negativos movem para a esquerda e positivos para a direita.
+- **Exigir botão direito pressionado:** quando ativado, o macro só atua enquanto os botões esquerdo e direito estiverem pressionados.
 
-- Força vertical: 0 a 10.000 px/s.
-- Correção lateral: -5.000 a 5.000 px/s.
-- Intervalo geral: 2 a 50 ms, compartilhado por todos os presets.
-- Jogo e nome do preset são obrigatórios.
+Os valores das armas e a opção do botão direito pertencem ao preset. O intervalo, por outro lado, é geral e compartilhado por todos eles.
+
+## Presets, importação e backups
+
+O arquivo ativo é `presets.json`, ao lado do executável. Ele guarda jogos, presets, valores e datas; a gravação usa um arquivo temporário antes de substituir o original. A pasta `backups\` mantém até 10 cópias recentes.
+
+Na primeira inicialização sem `presets.json`, o programa pode migrar `presets.cfg` nos formatos legados de cinco ou sete campos. Os registros migram para o jogo **Não categorizado**, e uma cópia chamada `presets.cfg.migration.bak` é criada antes da conversão. O CFG original é preservado.
+
+**Exportar presets** salva uma cópia completa em JSON. **Importar presets** aceita JSON e CFG legado, valida os registros e permite substituir ou ignorar itens duplicados por jogo e nome. A importação cria um backup antes de aplicar as alterações. **Restaurar backup** valida a cópia selecionada e também salva o estado atual antes de restaurar.
 
 ## Compilar no Windows
 
-Com Visual Studio Build Tools com suporte a .NET Framework 4.8 ou Visual Studio 2022, execute `.\build.ps1` no PowerShell. O executável é criado em `dist\Macro do Butler.exe`.
+Requisitos: Windows e Visual Studio Build Tools com suporte ao .NET Framework 4.8, Visual Studio 2022 ou o SDK do .NET com suporte ao projeto.
 
-## Estrutura
+No PowerShell, na pasta do projeto, execute:
 
-- `MainWindow.xaml` e `MainWindow.xaml.cs`: interface, seletores e integração do macro.
-- `src/Models/Preset.cs`: modelo hierárquico e metadados.
-- `src/Services/PresetService.cs`: leitura, migração e persistência JSON/CFG.
-- `src/Services/PresetOrganizationService.cs`: operações de organização, pesquisa e validação.
-- `src/Services/PresetBackupService.cs`: cópia, listagem e restauração de backups.
-- `src/Services/PresetTransferService.cs`: importação e exportação.
-- `src/Services/HotkeyService.cs`, `HotkeyParser.cs` e `HotkeyStorageService.cs`: registro global por `RegisterHotKey`, conversão, validação e persistência dos atalhos.
-- `src/Services/PresetDialogs.cs`: diálogos de categorias e duplicidades.
+```powershell
+.\build.ps1
+```
 
-Serviços específicos de migração e validação de domínio ficam em `PresetOrganizationService.cs`; a leitura legada é coordenada por `PresetService` antes de habilitar gravações no JSON.
+O executável e o arquivo de configuração são copiados para `dist\`. Também é possível compilar diretamente:
 
-Use automações somente em aplicativos e ambientes que permitam entradas simuladas. O projeto não implementa mecanismos para contornar proteções ou restrições de terceiros.
+```powershell
+dotnet build MacroDoButler.csproj -c Release
+```
+
+## Estrutura do projeto
+
+- `MainWindow.xaml` e `MainWindow.xaml.cs`: interface, presets e integração do macro.
+- `Themes/Controls.xaml`: estilos e controles visuais do tema.
+- `src/Models/Preset.cs`: modelo dos presets.
+- `src/Services/PresetService.cs`: leitura, migração e gravação dos presets.
+- `src/Services/PresetOrganizationService.cs`: organização e validação dos presets.
+- `src/Services/PresetBackupService.cs` e `PresetTransferService.cs`: backups e importação/exportação.
+- `src/Services/HotkeyService.cs`, `HotkeyParser.cs` e `HotkeyStorageService.cs`: registro, validação e persistência dos atalhos globais.
+- `src/Services/MacroSettingsStorageService.cs`: persistência do intervalo geral.
