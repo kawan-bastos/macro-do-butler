@@ -65,6 +65,16 @@ O executável e o arquivo de configuração são copiados para `dist\`. Também 
 dotnet build MacroDoButler.csproj -c Release
 ```
 
+## Atualizações
+
+Abra **Configurações → ATUALIZAÇÕES** e escolha **VERIFICAR ATUALIZAÇÕES**. Com a verificação automática ativada (padrão), o aplicativo consulta uma vez o GitHub Releases ao iniciar, em segundo plano, sem bloquear o macro ou baixar arquivos. Uma versão encontrada aparece como indicador nessa seção. Use **BAIXAR ATUALIZAÇÃO** e, após a validação do executável e do SHA-256 publicado, **INSTALAR AGORA**. O download pode ser cancelado enquanto está em andamento; uma falha de rede mantém a instalação atual.
+
+Antes de instalar, o atualizador cria um diretório `%LOCALAPPDATA%\MacroDoButler\backups\update_...` com `backup-manifest.json` e cópias verificadas dos presets, atalhos, configurações e backups locais. Os dados originais não são movidos. A nova versão é instalada por um auxiliar após o fechamento do aplicativo. Se a substituição ou a inicialização falhar, o auxiliar restaura a cópia anterior. Em `Program Files`, o Windows solicita consentimento UAC quando necessário. Se a permissão for negada, a instalação é cancelada e o executável atual continua no lugar.
+
+Os presets ativos ficam em `presets.json` junto do executável; formatos antigos como `presets.cfg` são mantidos, e os backups ficam em `backups\`. Atalhos e intervalo ficam em `%LOCALAPPDATA%\MacroDoButler\hotkeys.json` e `macro-settings.json`. O log opcional de diagnóstico do atualizador fica em `%LOCALAPPDATA%\MacroDoButler\update.log`. Para restaurar presets, use **Configurações → DADOS E BACKUP → RESTAURAR BACKUP** ou copie os arquivos do diretório de backup após fechar o aplicativo. Os dados pessoais nunca são empacotados como assets de release.
+
+A versão aparece em **Configurações → ATUALIZAÇÕES**. Releases estáveis usam tags `vMAJOR.MINOR.PATCH` e assets `Macro.do.Butler.exe` e `Macro.do.Butler.sha256`; o workflow publica esses assets quando uma tag é criada. A interface não exibe o endereço do repositório ou da release. O atualizador não depende do Logitech G HUB.
+
 ## Estrutura do projeto
 
 - `MainWindow.xaml` e `MainWindow.xaml.cs`: interface, presets e integração do macro.
@@ -75,3 +85,4 @@ dotnet build MacroDoButler.csproj -c Release
 - `src/Services/PresetBackupService.cs` e `PresetTransferService.cs`: backups e importação/exportação.
 - `src/Services/HotkeyService.cs`, `HotkeyParser.cs` e `HotkeyStorageService.cs`: registro, validação e persistência dos atalhos globais.
 - `src/Services/MacroSettingsStorageService.cs`: persistência do intervalo geral.
+- `src/Services/UpdateService.cs`, `UpdateDownloader.cs`, `UpdateInstaller.cs` e `UpdateBackupService.cs`: consulta, download validado, substituição com rollback e cópia de segurança.

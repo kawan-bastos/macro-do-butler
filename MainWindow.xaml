@@ -166,7 +166,7 @@
                             <StackPanel><TextBlock Text="CONFIGURAÇÕES" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="19" /><TextBlock Text="Preferências do aplicativo" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,0" /></StackPanel>
                             <Button Grid.Column="1" Content="VOLTAR" Style="{StaticResource SecondaryButtonStyle}" Width="110" Click="Settings_Click" />
                         </Grid>
-                        <TabControl Grid.Row="1" Style="{StaticResource DarkTabControlStyle}" ItemContainerStyle="{StaticResource DarkTabItemStyle}">
+                        <TabControl Grid.Row="1" Style="{StaticResource DarkTabControlStyle}" ItemContainerStyle="{StaticResource DarkTabItemStyle}" Cursor="Arrow">
                             <TabItem Header="ATALHOS">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
                                     <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="24,26">
@@ -209,6 +209,32 @@
                                             <Button Content="CRIAR BACKUP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="CreateBackup_Click" ToolTip="Criar um backup do arquivo atual de presets." />
                                             <Button Content="RESTAURAR BACKUP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="RestoreBackup_Click" ToolTip="Selecionar e restaurar um backup anterior." />
                                             <TextBlock x:Name="TransferFeedbackText" Foreground="#7EE2A8" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </ScrollViewer>
+                            </TabItem>
+                            <TabItem Header="ATUALIZAÇÕES">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="24,26">
+                                        <StackPanel>
+                                            <TextBlock Text="ATUALIZAÇÕES" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="14" />
+                                            <TextBlock Text="A versão atual e as novas versões são verificadas no GitHub Releases." Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="InstalledVersionText" Foreground="White" FontSize="12" />
+                                            <TextBlock x:Name="UpdateStatusText" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="LastUpdateCheckText" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="0,5,0,0" />
+                                            <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="100" Height="8" Margin="0,14,0,0" Visibility="Collapsed" />
+                                            <CheckBox x:Name="AutoUpdateCheck" Content="Verificar atualizações automaticamente" Style="{StaticResource ModernCheckStyle}" Margin="0,18,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
+                                            <CheckBox x:Name="OpenAfterUpdateCheck" Content="Abrir o aplicativo após atualizar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
+                                            <CheckBox x:Name="AskBeforeDownloadCheck" Content="Perguntar antes de baixar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
+                                            <CheckBox x:Name="AskBeforeInstallCheck" Content="Perguntar antes de instalar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
+                                            <CheckBox x:Name="KeepPreviousVersionCheck" Content="Manter uma cópia da versão anterior" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
+                                            <TextBlock Text="Seus presets, atalhos e backups serão incluídos em um backup antes da instalação." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,15,0,0" TextWrapping="Wrap" />
+                                            <WrapPanel Margin="0,16,0,0">
+                                                <Button x:Name="CheckUpdatesButton" Content="VERIFICAR ATUALIZAÇÕES" Style="{StaticResource SecondaryButtonStyle}" Click="CheckUpdates_Click" />
+                                                <Button x:Name="DownloadUpdateButton" Content="BAIXAR ATUALIZAÇÃO" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" IsEnabled="False" Click="DownloadUpdate_Click" />
+                                                <Button x:Name="InstallUpdateButton" Content="INSTALAR AGORA" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" IsEnabled="False" Click="InstallUpdate_Click" />
+                                                <Button x:Name="CancelUpdateButton" Content="CANCELAR" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Visibility="Collapsed" Click="CancelUpdate_Click" />
+                                            </WrapPanel>
                                         </StackPanel>
                                     </Border>
                                 </ScrollViewer>

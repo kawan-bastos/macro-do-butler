@@ -6,14 +6,20 @@
     <AssemblyName>Macro do Butler</AssemblyName>
     <RootNamespace>MacroDoButler</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Version>3.2.0</Version>
+    <AssemblyVersion>3.2.0.0</AssemblyVersion>
+    <FileVersion>3.2.0.0</FileVersion>
+    <InformationalVersion>3.2.0</InformationalVersion>
     <ApplicationIcon>assets\MacroDoButler.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="assets\MacroDoButler.png" />
+    <Compile Remove="build-check\UpdateHarness.cs" />
   </ItemGroup>
 </Project>

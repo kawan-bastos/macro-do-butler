@@ -10,6 +10,10 @@ using Microsoft.Win32;
 using System.Linq;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using System.Reflection;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MacroDoButler
 {
@@ -36,6 +40,15 @@ namespace MacroDoButler
         private Storyboard backgroundAnimation;
         private volatile bool enabled;
         private volatile bool secondaryActive;
+        private UpdateService updateService;
+        private UpdatePreferencesStorageService updatePreferencesStorage;
+        private UpdatePreferences updatePreferences;
+        private CancellationTokenSource updateCancellation;
+        private DispatcherTimer updateCooldownTimer;
+        private bool updateCooldownFromRateLimit;
+        private bool loadingUpdatePreferences;
+        private string updateDownloadPath;
+        private static readonly TimeSpan SuccessfulUpdateCheckCooldown=TimeSpan.FromMinutes(2);
 
         public MainWindow()
         {
@@ -48,13 +61,16 @@ namespace MacroDoButler
             IntervalText.Text=((int)IntervalSlider.Value).ToString();
             loadingMacroSettings=false;
             presetService = new PresetService(AppDomain.CurrentDomain.BaseDirectory);
+            string dataDirectory=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)+System.IO.Path.DirectorySeparatorChar+"MacroDoButler";
+            updateService=new UpdateService(GetApplicationVersion(),Process.GetCurrentProcess().MainModule.FileName,dataDirectory);
+            updatePreferencesStorage=new UpdatePreferencesStorageService(dataDirectory);updatePreferences=updatePreferencesStorage.Load();
             backupService = new PresetBackupService(presetService.FilePath);
             transferService = new PresetTransferService(backupService);
             inputService = new InputService(GetMovementSettings);
             inputService.ToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(Toggle)); };
             inputService.WeaponToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(ToggleWeapon)); };
             inputService.ExitRequested += delegate { Dispatcher.BeginInvoke(new Action(Close)); };
-            Loaded += delegate { RefreshHotkeyUi(); if(!string.IsNullOrEmpty(hotkeyWarning)) { HotkeyStatus.Text=hotkeyWarning; HotkeyStatus.Foreground=Brushes.Orange; } };
+            Loaded += delegate { RefreshHotkeyUi(); if(!string.IsNullOrEmpty(hotkeyWarning)) { HotkeyStatus.Text=hotkeyWarning; HotkeyStatus.Foreground=Brushes.Orange; } InitializeUpdateUi(); };
 
             IList<Preset> initialPresets = presetService.LoadAll();
             RefreshOrganization(initialPresets.FirstOrDefault());
@@ -503,6 +519,82 @@ namespace MacroDoButler
             if(!showSettings&&capturingAction!=null)CancelCapture();
             if(showSettings)HotkeyItems.Focus();
         }
+        private static string GetApplicationVersion(){var a=Assembly.GetEntryAssembly();var v=a==null?null:a.GetCustomAttribute<AssemblyInformationalVersionAttribute>();return v==null?"2.0.0":v.InformationalVersion;}
+        private void InitializeUpdateUi(){loadingUpdatePreferences=true;InstalledVersionText.Text="Versão instalada: "+updateService.LocalVersion;AutoUpdateCheck.IsChecked=updatePreferences.CheckAutomatically;OpenAfterUpdateCheck.IsChecked=updatePreferences.ReopenAfterUpdate;AskBeforeDownloadCheck.IsChecked=updatePreferences.AskBeforeDownload;AskBeforeInstallCheck.IsChecked=updatePreferences.AskBeforeInstall;KeepPreviousVersionCheck.IsChecked=updatePreferences.KeepPreviousVersion;loadingUpdatePreferences=false;if(updatePreferences.CheckAutomatically)Dispatcher.BeginInvoke(new Action(async delegate{await CheckForUpdatesAsync(false);}));}
+        private void UpdatePreference_Changed(object sender,RoutedEventArgs e){if(loadingUpdatePreferences||updatePreferences==null)return;updatePreferences.CheckAutomatically=AutoUpdateCheck.IsChecked==true;updatePreferences.ReopenAfterUpdate=OpenAfterUpdateCheck.IsChecked==true;updatePreferences.AskBeforeDownload=AskBeforeDownloadCheck.IsChecked==true;updatePreferences.AskBeforeInstall=AskBeforeInstallCheck.IsChecked==true;updatePreferences.KeepPreviousVersion=KeepPreviousVersionCheck.IsChecked==true;try{updatePreferencesStorage.Save(updatePreferences);}catch(Exception ex){UpdateStatusText.Text="Não foi possível salvar as preferências: "+ex.Message;}}
+        private async void CheckUpdates_Click(object sender,RoutedEventArgs e){await CheckForUpdatesAsync(true);}
+        private async Task CheckForUpdatesAsync(bool reportCurrent)
+        {
+            if(updateCancellation!=null)return;
+            DateTime now=DateTime.UtcNow;
+            if(updatePreferences.NextUpdateCheckUtc.HasValue&&updatePreferences.NextUpdateCheckUtc.Value>now)
+            {
+                StartUpdateCooldown(updatePreferences.NextUpdateCheckUtc.Value,false);
+                return;
+            }
+            StopUpdateCooldown();
+            updateCancellation=new CancellationTokenSource();CheckUpdatesButton.IsEnabled=false;CheckUpdateButtons(false);UpdateStatusText.Text="Verificando atualizações...";UpdateService.Log("Check started; local version "+updateService.LocalVersion);
+            try
+            {
+                UpdateInfo info=await updateService.CheckAsync(updateCancellation.Token);
+                updatePreferences.NextUpdateCheckUtc=DateTime.UtcNow.Add(SuccessfulUpdateCheckCooldown);SaveUpdatePreferences();
+                LastUpdateCheckText.Text="Última verificação: "+DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                if(info==null){UpdateStatusText.Text=reportCurrent?"Você está usando a versão mais recente.":"Verificação concluída. Nenhuma atualização encontrada.";UpdateService.Log("No newer version found");}
+                else{UpdateStatusText.Text="Nova versão disponível: "+info.Version+(info.FileSize.HasValue?" · "+FormatBytes(info.FileSize.Value):"");DownloadUpdateButton.IsEnabled=true;UpdateService.Log("Version found: "+info.Version);}
+            }
+            catch(UpdateRateLimitException ex)
+            {
+                updatePreferences.NextUpdateCheckUtc=ex.RetryAfterUtc;SaveUpdatePreferences();
+                StartUpdateCooldown(ex.RetryAfterUtc,true);
+                LastUpdateCheckText.Text="Última tentativa: "+DateTime.Now.ToString("dd/MM/yyyy HH:mm");UpdateService.Log("GitHub rate limit; retry after "+ex.RetryAfterUtc.ToString("o"));
+            }
+            catch(OperationCanceledException){UpdateStatusText.Text="Atualização cancelada.";}
+            catch(Exception ex)
+            {
+                updatePreferences.NextUpdateCheckUtc=DateTime.UtcNow.AddSeconds(30);SaveUpdatePreferences();
+                UpdateStatusText.Text="Não foi possível verificar atualizações. "+ex.Message+" Aguarde 30 segundos antes de tentar novamente.";
+                LastUpdateCheckText.Text="Última tentativa: "+DateTime.Now.ToString("dd/MM/yyyy HH:mm");UpdateService.Log("Check failed: "+ex.Message);
+            }
+            finally{updateCancellation.Dispose();updateCancellation=null;CheckUpdatesButton.IsEnabled=true;CheckUpdateButtons(true);}
+        }
+        private void StartUpdateCooldown(DateTime untilUtc,bool rateLimited)
+        {
+            updatePreferences.NextUpdateCheckUtc=untilUtc;updateCooldownFromRateLimit=rateLimited;
+            if(updateCooldownTimer==null){updateCooldownTimer=new DispatcherTimer{Interval=TimeSpan.FromSeconds(1)};updateCooldownTimer.Tick+=UpdateCooldownTimer_Tick;}
+            UpdateCooldownTimer_Tick(null,null);if(updatePreferences.NextUpdateCheckUtc.HasValue&&updatePreferences.NextUpdateCheckUtc.Value>DateTime.UtcNow)updateCooldownTimer.Start();
+        }
+        private void UpdateCooldownTimer_Tick(object sender,EventArgs e)
+        {
+            if(!updatePreferences.NextUpdateCheckUtc.HasValue){StopUpdateCooldown();return;}
+            TimeSpan remaining=updatePreferences.NextUpdateCheckUtc.Value-DateTime.UtcNow;
+            if(remaining<=TimeSpan.Zero)
+            {
+                StopUpdateCooldown();updatePreferences.NextUpdateCheckUtc=null;SaveUpdatePreferences();
+                UpdateStatusText.Text=updateCooldownFromRateLimit?"O limite do GitHub foi liberado. Você já pode verificar novamente.":"Você já pode verificar atualizações novamente.";updateCooldownFromRateLimit=false;return;
+            }
+            string wait=FormatWait(remaining);
+            UpdateStatusText.Text=updateCooldownFromRateLimit
+                ?"O GitHub limitou as verificações. Não clique várias vezes seguidas. Aguarde até "+updatePreferences.NextUpdateCheckUtc.Value.ToLocalTime().ToString("HH:mm")+" (aprox. "+wait+") para verificar novamente."
+                :"Você já verificou há pouco. Não clique várias vezes seguidas. Aguarde "+wait+" para tentar de novo.";
+        }
+        private void StopUpdateCooldown(){if(updateCooldownTimer!=null)updateCooldownTimer.Stop();}
+        private void SaveUpdatePreferences(){try{updatePreferencesStorage.Save(updatePreferences);}catch(Exception ex){UpdateService.Log("Could not persist update cooldown: "+ex.Message);}}
+        private static string FormatWait(TimeSpan wait){if(wait<TimeSpan.Zero)wait=TimeSpan.Zero;if(wait.TotalMinutes>=1)return Math.Ceiling(wait.TotalMinutes).ToString("0")+" minuto(s)";return Math.Max(1,(int)Math.Ceiling(wait.TotalSeconds)).ToString()+" segundo(s)";}
+        private async void DownloadUpdate_Click(object sender,RoutedEventArgs e)
+        {
+            if(updateService.Available==null)return;if(AskBeforeDownloadCheck.IsChecked==true&&MessageBox.Show(this,"Baixar a versão "+updateService.Available.Version+"? Seus dados serão preservados.","Baixar atualização",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
+            StopUpdateCooldown();
+            updateCancellation=new CancellationTokenSource();UpdateProgress.Value=0;UpdateProgress.Visibility=Visibility.Visible;CancelUpdateButton.Visibility=Visibility.Visible;DownloadUpdateButton.IsEnabled=false;UpdateStatusText.Text="Baixando atualização...";UpdateService.Log("Download started");var progress=new Progress<double>(v=>UpdateProgress.Value=v);
+            try{updateDownloadPath=await updateService.DownloadAsync(progress,updateCancellation.Token);UpdateStatusText.Text="Atualização pronta para instalar.";InstallUpdateButton.IsEnabled=true;UpdateService.Log("Download completed and validated");}catch(OperationCanceledException){UpdateStatusText.Text="Atualização cancelada.";UpdateService.Log("Download cancelled");}catch(Exception ex){UpdateStatusText.Text="Falha ao baixar a atualização. "+ex.Message;UpdateService.Log("Download failed: "+ex.Message);DownloadUpdateButton.IsEnabled=true;}finally{updateCancellation.Dispose();updateCancellation=null;CancelUpdateButton.Visibility=Visibility.Collapsed;UpdateProgress.Visibility=Visibility.Collapsed;}
+        }
+        private void InstallUpdate_Click(object sender,RoutedEventArgs e)
+        {
+            if(string.IsNullOrEmpty(updateDownloadPath))return;if(AskBeforeInstallCheck.IsChecked==true&&MessageBox.Show(this,"Uma nova versão está disponível. Seus presets, atalhos e backups serão preservados durante a atualização. Criar backup e instalar agora?","Instalar atualização",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
+            try{UpdateStatusText.Text="Preparando backup e instalação...";updateService.Install(updatePreferences.ReopenAfterUpdate,Process.GetCurrentProcess().Id,updatePreferences.KeepPreviousVersion,updatePreferences.PreviousVersionsToKeep);UpdateStatusText.Text="Instalador iniciado. O aplicativo será fechado para concluir a atualização.";Close();}catch(Exception ex){UpdateStatusText.Text="Não foi possível instalar: "+ex.Message;UpdateService.Log("Install failed: "+ex.Message);MessageBox.Show(this,ex.Message,"Falha na atualização",MessageBoxButton.OK,MessageBoxImage.Error);}
+        }
+        private void CancelUpdate_Click(object sender,RoutedEventArgs e){if(updateCancellation!=null)updateCancellation.Cancel();}
+        private void CheckUpdateButtons(bool enabled){if(enabled)DownloadUpdateButton.IsEnabled=updateService.Available!=null&&string.IsNullOrEmpty(updateDownloadPath);else DownloadUpdateButton.IsEnabled=false;}
+        private static string FormatBytes(long n){return n<1024*1024?(n/1024.0).ToString("0")+" KB":(n/(1024.0*1024)).ToString("0.0")+" MB";}
         private void Window_StateChanged(object sender, EventArgs e)
         {
             if (backgroundAnimation == null) return;

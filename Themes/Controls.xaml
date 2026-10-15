@@ -126,13 +126,12 @@
         <Setter Property="Padding" Value="20,13" />
         <Setter Property="Margin" Value="0,0,10,0" />
         <Setter Property="MinHeight" Value="46" />
-        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Focusable" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TabItem">
                     <Grid Background="Transparent">
-                        <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" Margin="{TemplateBinding Padding}" />
+                        <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" Margin="{TemplateBinding Padding}" Cursor="Hand" />
                         <Border x:Name="ActiveIndicator" Height="2" Background="Transparent" VerticalAlignment="Bottom" CornerRadius="1" />
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -196,6 +195,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonBorder" Property="Effect"><Setter.Value><DropShadowEffect Color="#66FF3B4F" BlurRadius="7" ShadowDepth="0" Opacity="0.35" /></Setter.Value></Setter></Trigger>
                         <Trigger Property="IsPressed" Value="True"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.75" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.38" /><Setter Property="Foreground" Value="#FF91A0B0" /><Setter Property="Cursor" Value="Arrow" /></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
