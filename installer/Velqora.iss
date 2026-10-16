@@ -114,37 +114,40 @@ begin
 end;
 
 function InitializeSetup: Boolean;
-var Release: Cardinal; Uninstaller: String; ExitCode: Integer;
+var Release: Cardinal; Uninstaller: String; ExitCode: Integer; I: Integer; HasSmokeUninstallFlag: Boolean;
 begin
   Result := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', Release);
   if Result then Result := Release >= 528040;
   if not Result then begin
-    MsgBox('O Velqora requer .NET Framework 4.8 ou superior. Instale o pacote oficial da Microsoft e execute este instalador novamente. Nenhum download será iniciado automaticamente.', mbError, MB_OK);
+    SuppressibleMsgBox('O Velqora requer .NET Framework 4.8 ou superior. Instale o pacote oficial da Microsoft e execute este instalador novamente. Nenhum download será iniciado automaticamente.', mbError, MB_OK, IDOK);
     exit;
   end;
   if not InstalledUninstaller(Uninstaller) or IsApplicationUpdate then exit;
   Result := False;
   if WizardSilent then begin
 #ifdef SmokeTest
-    if CompareText(ParamStr(ParamCount), '/SMOKEUNINSTALL') <> 0 then exit;
+    HasSmokeUninstallFlag := False;
+    for I := 1 to ParamCount do
+      if CompareText(ParamStr(I), '/SMOKEUNINSTALL') = 0 then HasSmokeUninstallFlag := True;
+    if not HasSmokeUninstallFlag then exit;
 #else
     exit;
 #endif
-  end else if MsgBox('O aplicativo já está instalado. Deseja desinstalar? Seus presets e configurações serão preservados.',
-    mbConfirmation, MB_YESNO or MB_DEFBUTTON2) <> IDYES then exit;
+  end else if SuppressibleMsgBox('O aplicativo já está instalado. Deseja desinstalar? Seus presets e configurações serão preservados.',
+    mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) <> IDYES then exit;
   if CheckForMutexes('{#RunningMutex}') then begin
-    MsgBox('Feche o Velqora ou Macro do Butler (F12) antes de desinstalar.', mbError, MB_OK);
+    SuppressibleMsgBox('Feche o Velqora ou Macro do Butler (F12) antes de desinstalar.', mbError, MB_OK, IDOK);
     exit;
   end;
   if not FileExists(Uninstaller) then begin
-    MsgBox('A instalação anterior foi encontrada, mas o desinstalador não está disponível. Remova a instalação anterior em Aplicativos instalados do Windows.', mbError, MB_OK);
+    SuppressibleMsgBox('A instalação anterior foi encontrada, mas o desinstalador não está disponível. Remova a instalação anterior em Aplicativos instalados do Windows.', mbError, MB_OK, IDOK);
     exit;
   end;
   if not Exec(Uninstaller, '/SILENT /NORESTART', ExtractFileDir(Uninstaller), SW_SHOWNORMAL,
     ewWaitUntilTerminated, ExitCode) or (ExitCode <> 0) then
-    MsgBox('A desinstalação não foi concluída. A instalação atual foi mantida.', mbError, MB_OK)
+    SuppressibleMsgBox('A desinstalação não foi concluída. A instalação atual foi mantida.', mbError, MB_OK, IDOK)
   else
-    MsgBox('Velqora desinstalado. Seus presets e configurações foram preservados. Para instalar novamente, abra este Setup outra vez.', mbInformation, MB_OK);
+    SuppressibleMsgBox('Velqora desinstalado. Seus presets e configurações foram preservados. Para instalar novamente, abra este Setup outra vez.', mbInformation, MB_OK, IDOK);
 end;
 
 procedure AddSecondaryNote(Page: TWizardPage; Top: Integer; Caption: String);
@@ -218,14 +221,14 @@ begin
       if StrToVersion(OldVersion, OldPacked) and StrToVersion('{#AppVersion}.0', NewPacked) then
         if ComparePackedVersion(OldPacked, NewPacked) > 0 then begin
           if WizardSilent then Result := False
-          else Result := MsgBox('A versão instalada é ' + OldVersion + '. Confirma instalar uma versão anterior? Os dados podem não ser compatíveis.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES;
+          else Result := SuppressibleMsgBox('A versão instalada é ' + OldVersion + '. Confirma instalar uma versão anterior? Os dados podem não ser compatíveis.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES;
         end;
   end;
   if CurPageID = PresetFilePage.ID then begin
     Result := FileExists(PresetFilePage.Values[0]) and
       ((LowerCase(ExtractFileExt(PresetFilePage.Values[0])) = '.json') or
        (LowerCase(ExtractFileExt(PresetFilePage.Values[0])) = '.cfg'));
-    if not Result then MsgBox('Selecione um arquivo de presets .json ou .cfg válido.', mbError, MB_OK);
+    if not Result then SuppressibleMsgBox('Selecione um arquivo de presets .json ou .cfg válido.', mbError, MB_OK, IDOK);
   end;
 end;
 
@@ -273,9 +276,9 @@ begin
   if not ForceDirectories(Directory) or
     (not FileExists(Target) and not CopyFile(Source, Target, True)) or
     (SourceHash <> GetSHA256OfFile(Target)) then
-    MsgBox('O Velqora foi instalado, mas não foi possível preparar a importação. Abra o aplicativo e use Importar presets para escolher o arquivo novamente.', mbError, MB_OK);
+    SuppressibleMsgBox('O Velqora foi instalado, mas não foi possível preparar a importação. Abra o aplicativo e use Importar presets para escolher o arquivo novamente.', mbError, MB_OK, IDOK);
   except
-    MsgBox('O Velqora foi instalado, mas o arquivo escolhido não pôde ser copiado. Abra o aplicativo e use Importar presets para escolhê-lo novamente.', mbError, MB_OK);
+    SuppressibleMsgBox('O Velqora foi instalado, mas o arquivo escolhido não pôde ser copiado. Abra o aplicativo e use Importar presets para escolhê-lo novamente.', mbError, MB_OK, IDOK);
   end;
 end;
 
@@ -335,7 +338,7 @@ begin
     CancelButton.SetBounds(ScaleX(425), ScaleY(125), ScaleX(90), ScaleY(26));
     Result := Form.ShowModal = mrOK;
     if Result and Check.Checked then
-      RemoveData := MsgBox('Excluir definitivamente somente ' + PersonalDataDirectory + '? As cópias na pasta antiga serão mantidas.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES;
+      RemoveData := SuppressibleMsgBox('Excluir definitivamente somente ' + PersonalDataDirectory + '? As cópias na pasta antiga serão mantidas.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES;
   finally Form.Free; end;
 end;
 
@@ -345,8 +348,8 @@ begin
   if (CurUninstallStep = usPostUninstall) and RemoveData then begin
     Data := PersonalDataDirectory;
     if DirExists(Data) then begin
-      if not SafeTree(Data) then MsgBox('Dados preservados: foi encontrado um link ou junção. Remova os dados manualmente após verificar o caminho.', mbError, MB_OK)
-      else if not DelTree(Data, True, True, True) then MsgBox('Alguns dados não puderam ser removidos. Verifique: ' + Data, mbError, MB_OK);
+      if not SafeTree(Data) then SuppressibleMsgBox('Dados preservados: foi encontrado um link ou junção. Remova os dados manualmente após verificar o caminho.', mbError, MB_OK, IDOK)
+      else if not DelTree(Data, True, True, True) then SuppressibleMsgBox('Alguns dados não puderam ser removidos. Verifique: ' + Data, mbError, MB_OK, IDOK);
     end;
   end;
 end;

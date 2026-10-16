@@ -22,7 +22,9 @@ $Installer = Join-Path $target "package\Velqora-Setup-v$version.exe"
 function Install-Test([switch]$Update) {
     $arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/TASKS=desktopicon', ('/DIR="' + $target + '"'), ('/LOG="' + $target + '\setup.log"'))
     if ($Update) { $arguments += '/UPDATE' }
+    Write-Host "START: Instalação $(if ($Update) { 'de atualização' } else { 'limpa' })"
     $process = Start-Process -FilePath $Installer -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru
+    Write-Host "DONE: instalação (exit code $($process.ExitCode))"
     if ($process.ExitCode -ne 0) { throw "Instalador retornou $($process.ExitCode). Consulte $target\setup.log" }
 }
 function Assert-Test([bool]$Value, [string]$Message) { if (-not $Value) { throw $Message }; Write-Host "PASS: $Message" }
@@ -35,10 +37,14 @@ try {
     Assert-Test (Test-Path $registry) 'Entrada em Aplicativos instalados'
     $registeredUninstaller = (Get-ItemProperty -Path $registry).UninstallString.Trim('"')
     Assert-Test (Test-Path -LiteralPath $registeredUninstaller) 'Desinstalador registrado e acessível'
-    $repeat = Start-Process -FilePath $Installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART', ('/DIR="' + $target + '"')) -WindowStyle Hidden -Wait -PassThru
+    Write-Host 'START: Bloqueio de segunda instalação'
+    $repeat = Start-Process -FilePath $Installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART', ('/DIR="' + $target + '"'), ('/LOG="' + $target + '\repeat.log"')) -WindowStyle Hidden -Wait -PassThru
+    Write-Host "DONE: bloqueio (exit code $($repeat.ExitCode))"
     Assert-Test ($repeat.ExitCode -ne 0) 'Segunda execução silenciosa bloqueada sem autorização de atualização'
     Assert-Test ((Test-Path $registry) -and (Test-Path -LiteralPath "$target\Velqora.exe")) 'Instalação existente preservada após bloqueio'
-    $remove = Start-Process -FilePath $Installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SMOKEUNINSTALL') -WindowStyle Hidden -Wait -PassThru
+    Write-Host 'START: Desinstalação iniciada pelo Setup'
+    $remove = Start-Process -FilePath $Installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART', ('/LOG="' + $target + '\smoke-uninstall.log"'), '/SMOKEUNINSTALL') -WindowStyle Hidden -Wait -PassThru
+    Write-Host "DONE: desinstalação iniciada pelo Setup (exit code $($remove.ExitCode))"
     Assert-Test (($remove.ExitCode -ne 0) -and -not (Test-Path $registry)) 'Resposta Sim desinstala e encerra o Setup sem reinstalar'
     Assert-Test (Test-Path -LiteralPath $stagedPreset) 'Desinstalação preserva presets pendentes'
     Install-Test
@@ -57,7 +63,9 @@ try {
     Assert-Test (@(Get-ChildItem -LiteralPath "$target\previous-versions" -Filter Velqora.exe -Recurse).Count -gt 0) 'Cópia anterior preservada para recuperação'
 } finally {
     if (Test-Path -LiteralPath "$target\unins000.exe") {
-        $uninstall = Start-Process -FilePath "$target\unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -WindowStyle Hidden -Wait -PassThru
+        Write-Host 'START: Limpeza da instalação de teste'
+        $uninstall = Start-Process -FilePath "$target\unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART', ('/LOG="' + $target + '\cleanup.log"')) -WindowStyle Hidden -Wait -PassThru
+        Write-Host "DONE: limpeza (exit code $($uninstall.ExitCode))"
         if ($uninstall.ExitCode -ne 0) { throw "Falha ao desinstalar fixture: $target" }
     }
 }
@@ -73,7 +81,9 @@ New-Item -ItemType Directory -Path $sibling -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $smokeData '.smoke-delete-opt-in') -Value 'synthetic opt-in'
 Set-Content -LiteralPath (Join-Path $smokeData 'presets.json') -Value 'synthetic user data'
 Set-Content -LiteralPath (Join-Path $sibling 'sentinel.txt') -Value 'must survive'
-$uninstall = Start-Process -FilePath "$target\unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -WindowStyle Hidden -Wait -PassThru
+Write-Host 'START: Remoção explícita dos dados de teste'
+$uninstall = Start-Process -FilePath "$target\unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART', ('/LOG="' + $target + '\remove-data.log"')) -WindowStyle Hidden -Wait -PassThru
+Write-Host "DONE: remoção explícita (exit code $($uninstall.ExitCode))"
 if ($uninstall.ExitCode -ne 0) { throw 'Falha no teste de remoção explícita.' }
 Assert-Test (-not (Test-Path -LiteralPath $smokeData)) 'Remoção explícita atinge somente diretório de dados do teste'
 Assert-Test (Test-Path -LiteralPath (Join-Path $sibling 'sentinel.txt')) 'Diretório vizinho preservado'

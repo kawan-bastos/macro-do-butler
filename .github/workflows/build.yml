@@ -38,6 +38,7 @@ jobs:
         shell: pwsh
         run: ./scripts/build-installer.ps1 -Sign:([bool]$env:VELQORA_SIGN_THUMBPRINT)
       - name: Testar instalação com identidade isolada
+        timeout-minutes: 10
         shell: pwsh
         env:
           PACKAGE_RELEASE_DIR: ${{ steps.package.outputs.release_dir }}
