@@ -15,12 +15,12 @@ internal sealed class UpdateBackupService
     {
         string backupRoot=Path.Combine(userDataDirectory,"backups");Directory.CreateDirectory(backupRoot);
         string stamp=DateTime.Now.ToString("yyyy-MM-dd_HHmmss",CultureInfo.InvariantCulture);string destination=Path.Combine(backupRoot,"update_"+stamp+"_"+Guid.NewGuid().ToString("N").Substring(0,6));Directory.CreateDirectory(destination);
-        var manifest=new UpdateBackupManifest{Application="Macro Do Butler",Version=version,CreatedAt=DateTime.UtcNow.ToString("o",CultureInfo.InvariantCulture),Files=new List<UpdateBackupFile>()};
+        var manifest=new UpdateBackupManifest{Application="Velqora",Version=version,CreatedAt=DateTime.UtcNow.ToString("o",CultureInfo.InvariantCulture),Files=new List<UpdateBackupFile>()};
         try
         {
             CopyNamedFiles(installDirectory,destination,new[]{"presets.cfg","presets.cfg.bak","presets.cfg.migration.bak","presets.json","presets.json.bak","hotkeys.json","settings.json"},manifest,"install");
             string oldBackups=Path.Combine(installDirectory,"backups");if(Directory.Exists(oldBackups))CopyExistingBackups(oldBackups,destination,manifest);
-            CopyNamedFiles(userDataDirectory,destination,new[]{"hotkeys.json","macro-settings.json","update-preferences.json"},manifest,"user-data");
+            CopyNamedFiles(userDataDirectory,destination,new[]{"presets.cfg","presets.cfg.bak","presets.json","presets.json.bak","hotkeys.json","settings.json","macro-settings.json","update-preferences.json"},manifest,"user-data");
             using(var f=File.Create(Path.Combine(destination,"backup-manifest.json")))new DataContractJsonSerializer(typeof(UpdateBackupManifest)).WriteObject(f,manifest);
             return destination;
         }

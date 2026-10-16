@@ -14,47 +14,26 @@ internal abstract class ButlerDialog : Window
         Title = title; Owner = owner; Width = 440; SizeToContent = SizeToContent.Height; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         WindowStyle = WindowStyle.None; AllowsTransparency = true; Background = Brushes.Transparent; ResizeMode = ResizeMode.NoResize;
         Resources[typeof(Button)] = CreateDialogButtonStyle();
-        var shell = new Border { CornerRadius = new CornerRadius(16), BorderBrush = Brush("#53313B"), BorderThickness = new Thickness(1), Background = Brush("#FF10151C"), Padding = new Thickness(22) };
+        var shell = new Border { CornerRadius = new CornerRadius(16), BorderBrush = Brush("#413B2E"), BorderThickness = new Thickness(1), Background = Brush("#FF171719"), Padding = new Thickness(22) };
         Content = shell; Root = new StackPanel(); shell.Child = Root;
     }
     protected StackPanel Root { get; private set; }
     protected void Heading(string title, string subtitle)
     {
-        Root.Children.Add(new TextBlock { Text = title, Foreground = Brush("#FF3B4F"), FontSize = 14, FontWeight = FontWeights.SemiBold });
-        Root.Children.Add(new TextBlock { Text = subtitle, Foreground = Brush("#AAB1BD"), Margin = new Thickness(0, 6, 0, 14), TextWrapping = TextWrapping.Wrap });
+        Root.Children.Add(new TextBlock { Text = title, Foreground = Brush("#DFC184"), FontSize = 14, FontWeight = FontWeights.SemiBold });
+        Root.Children.Add(new TextBlock { Text = subtitle, Foreground = Brush("#B5B1A8"), Margin = new Thickness(0, 6, 0, 14), TextWrapping = TextWrapping.Wrap });
     }
     protected static SolidColorBrush Brush(string value) { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(value)); }
     protected Button AddButton(string label, Action action)
     {
-        var button = new Button { Content = label, Height = 38, Margin = new Thickness(0, 6, 0, 0), Background = Brush("#982436"), Foreground = Brushes.White, BorderThickness = new Thickness(0), FontWeight = FontWeights.SemiBold, Cursor = System.Windows.Input.Cursors.Hand };
+        var button = new Button { Content = label, Height = 48, Margin = new Thickness(0, 6, 0, 0), Background = Brush("#55452A"), Foreground = Brushes.White, BorderThickness = new Thickness(1), FontWeight = FontWeights.SemiBold, Cursor = System.Windows.Input.Cursors.Hand };
         button.Click += (s, e) => action(); Root.Children.Add(button); return button;
     }
     private static Style CreateDialogButtonStyle()
     {
-        var style=new Style(typeof(Button));
-        var template=new ControlTemplate(typeof(Button));
-        var border=new FrameworkElementFactory(typeof(Border));
-        border.Name="DialogButtonBorder";
-        border.SetBinding(Border.BackgroundProperty,new System.Windows.Data.Binding("Background"){RelativeSource=System.Windows.Data.RelativeSource.TemplatedParent});
-        border.SetBinding(Border.BorderBrushProperty,new System.Windows.Data.Binding("BorderBrush"){RelativeSource=System.Windows.Data.RelativeSource.TemplatedParent});
-        border.SetBinding(Border.BorderThicknessProperty,new System.Windows.Data.Binding("BorderThickness"){RelativeSource=System.Windows.Data.RelativeSource.TemplatedParent});
-        border.SetValue(Border.CornerRadiusProperty,new CornerRadius(5));
-        var content=new FrameworkElementFactory(typeof(ContentPresenter));
-        content.Name="DialogButtonContent";
-        content.SetBinding(ContentPresenter.ContentProperty,new System.Windows.Data.Binding("Content"){RelativeSource=System.Windows.Data.RelativeSource.TemplatedParent});
-        content.SetBinding(ContentPresenter.ContentTemplateProperty,new System.Windows.Data.Binding("ContentTemplate"){RelativeSource=System.Windows.Data.RelativeSource.TemplatedParent});
-        content.SetValue(ContentPresenter.HorizontalAlignmentProperty,HorizontalAlignment.Center);
-        content.SetValue(ContentPresenter.VerticalAlignmentProperty,VerticalAlignment.Center);
-        content.SetValue(ContentPresenter.RecognizesAccessKeyProperty,true);
-        border.AppendChild(content);template.VisualTree=border;
-        var disabled=new Trigger{Property=Button.IsEnabledProperty,Value=false};
-        disabled.Setters.Add(new Setter(Border.BackgroundProperty,Brush("#252B33"),"DialogButtonBorder"));
-        disabled.Setters.Add(new Setter(Border.BorderBrushProperty,Brush("#353D48"),"DialogButtonBorder"));
-        disabled.Setters.Add(new Setter(System.Windows.Documents.TextElement.ForegroundProperty,Brush("#8993A0"),"DialogButtonContent"));
-        template.Triggers.Add(disabled);
-        style.Setters.Add(new Setter(Button.TemplateProperty,template));
-        return style;
+        return new Style(typeof(Button), (Style)Application.Current.FindResource("SecondaryButtonStyle"));
     }
+
 }
 
 internal sealed class GamePresetOrganizerWindow : ButlerDialog
@@ -96,23 +75,23 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
         var editorPanel=new StackPanel{Margin=new Thickness(8)};
         gameSelector=new System.Windows.Controls.ComboBox{Style=(Style)owner.FindResource("ComboStyle"),ItemsSource=games};
         editorPanel.Children.Add(gameSelector);
-        editorPanel.Children.Add(new TextBlock{Text="Editar nome do jogo selecionado",Foreground=Brush("#AAB1BD"),Margin=new Thickness(0,10,0,5)});
-        var renameRow=new Grid();renameRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());renameRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(8)});renameRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(132)});
-        renameGameName=new System.Windows.Controls.TextBox{Height=38,Padding=new Thickness(12,0,12,0),Background=Brush("#CC151B23"),Foreground=Brush("#F5F7FA"),BorderBrush=Brush("#29313B"),CaretBrush=Brush("#FF3B4F"),VerticalContentAlignment=VerticalAlignment.Center};
+        editorPanel.Children.Add(new TextBlock{Text="Editar nome do jogo selecionado",Foreground=Brush("#B5B1A8"),Margin=new Thickness(0,10,0,5)});
+        var renameRow=new Grid();renameRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());renameRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(8)});renameRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(176)});
+        renameGameName=new System.Windows.Controls.TextBox{Height=38,Padding=new Thickness(12,0,12,0),Background=Brush("#FF202022"),Foreground=Brush("#F2F0EB"),BorderBrush=Brush("#333335"),CaretBrush=Brush("#DFC184"),VerticalContentAlignment=VerticalAlignment.Center};
         renameRow.Children.Add(renameGameName);
-        renameGameButton=new Button{Content="RENOMEAR",Height=38,Background=Brush("#41464E"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(0),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};Grid.SetColumn(renameGameButton,2);renameRow.Children.Add(renameGameButton);editorPanel.Children.Add(renameRow);
-        editorPanel.Children.Add(new TextBlock{Text="Criar novo jogo",Foreground=Brush("#AAB1BD"),Margin=new Thickness(0,14,0,5)});
-        var createRow=new Grid();createRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());createRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(8)});createRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(132)});
-        newGameName=new System.Windows.Controls.TextBox{Height=38,Padding=new Thickness(12,0,12,0),Background=Brush("#CC151B23"),Foreground=Brush("#F5F7FA"),BorderBrush=Brush("#29313B"),CaretBrush=Brush("#FF3B4F"),VerticalContentAlignment=VerticalAlignment.Center};
+        renameGameButton=new Button{Content="Renomear",Height=48,Background=Brush("#343330"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(1),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};Grid.SetColumn(renameGameButton,2);renameRow.Children.Add(renameGameButton);editorPanel.Children.Add(renameRow);
+        editorPanel.Children.Add(new TextBlock{Text="Criar novo jogo",Foreground=Brush("#B5B1A8"),Margin=new Thickness(0,14,0,5)});
+        var createRow=new Grid();createRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());createRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(8)});createRow.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(176)});
+        newGameName=new System.Windows.Controls.TextBox{Height=38,Padding=new Thickness(12,0,12,0),Background=Brush("#FF202022"),Foreground=Brush("#F2F0EB"),BorderBrush=Brush("#333335"),CaretBrush=Brush("#DFC184"),VerticalContentAlignment=VerticalAlignment.Center};
         createRow.Children.Add(newGameName);
-        var createButton=new Button{Content="CRIAR JOGO",Height=38,Background=Brush("#982436"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(0),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};Grid.SetColumn(createButton,2);createRow.Children.Add(createButton);editorPanel.Children.Add(createRow);
+        var createButton=new Button{Content="Criar jogo",Height=48,Background=Brush("#55452A"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(1),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};Grid.SetColumn(createButton,2);createRow.Children.Add(createButton);editorPanel.Children.Add(createRow);
         var presetHeader=new Grid{Margin=new Thickness(0,14,0,5)};
         presetHeader.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());
         presetHeader.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=GridLength.Auto});
-        presetHeader.Children.Add(new TextBlock{Text="Presets sem jogo",Foreground=Brush("#AAB1BD"),VerticalAlignment=VerticalAlignment.Center});
-        selectionToggleButton=new CheckBox{Content="Selecionar tudo",Style=(Style)owner.FindResource("ModernCheckStyle"),Foreground=Brush("#FF5AA9FF"),FontSize=12,HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(0)};
+        presetHeader.Children.Add(new TextBlock{Text="Presets sem jogo",Foreground=Brush("#B5B1A8"),VerticalAlignment=VerticalAlignment.Center});
+        selectionToggleButton=new CheckBox{Content="Selecionar tudo",Style=(Style)owner.FindResource("ModernCheckStyle"),Foreground=Brush("#DFC184"),FontSize=12,HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(0)};
         Grid.SetColumn(selectionToggleButton,1);presetHeader.Children.Add(selectionToggleButton);editorPanel.Children.Add(presetHeader);
-        availablePresets=new System.Windows.Controls.ListBox{Background=Brush("#FF151B23"),Foreground=System.Windows.Media.Brushes.White,BorderBrush=Brush("#29313B"),MinHeight=45,MaxHeight=125};System.Windows.Controls.ScrollViewer.SetVerticalScrollBarVisibility(availablePresets,System.Windows.Controls.ScrollBarVisibility.Auto);editorPanel.Children.Add(availablePresets);
+        availablePresets=new System.Windows.Controls.ListBox{Background=Brush("#FF202022"),Foreground=System.Windows.Media.Brushes.White,BorderBrush=Brush("#333335"),MinHeight=45,MaxHeight=125};System.Windows.Controls.ScrollViewer.SetVerticalScrollBarVisibility(availablePresets,System.Windows.Controls.ScrollBarVisibility.Auto);editorPanel.Children.Add(availablePresets);
         editTab.Content=editorPanel;
 
         var recognitionTab=new TabItem{Header="Reconhecer jogos automaticamente",Style=(Style)owner.FindResource("DarkTabItemStyle")};
@@ -120,20 +99,20 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
         var launcherTabs=new TabControl{Style=(Style)owner.FindResource("DarkTabControlStyle")};
         var steamTab=new TabItem{Header="Steam",Tag="steam",Style=(Style)owner.FindResource("DarkTabItemStyle")};
         var steamPanel=new StackPanel{Margin=new Thickness(8)};
-        steamPanel.Children.Add(new TextBlock{Text="Jogos instalados pela Steam",Foreground=Brush("#AAB1BD"),Margin=new Thickness(0,0,0,6)});
-        steamStatus=new TextBlock{Text="Abra esta aba para procurar jogos instalados nas bibliotecas Steam deste computador.",Foreground=Brush("#9199A6"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,8)};
+        steamPanel.Children.Add(new TextBlock{Text="Jogos instalados pela Steam",Foreground=Brush("#B5B1A8"),Margin=new Thickness(0,0,0,6)});
+        steamStatus=new TextBlock{Text="Abra esta aba para procurar jogos instalados nas bibliotecas Steam deste computador.",Foreground=Brush("#A5A29B"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,8)};
         steamPanel.Children.Add(steamStatus);
-        steamGamesList=new System.Windows.Controls.ListBox{Background=Brush("#FF151B23"),Foreground=System.Windows.Media.Brushes.White,BorderBrush=Brush("#29313B"),MinHeight=80,MaxHeight=230};
+        steamGamesList=new System.Windows.Controls.ListBox{Background=Brush("#FF202022"),Foreground=System.Windows.Media.Brushes.White,BorderBrush=Brush("#333335"),MinHeight=80,MaxHeight=230};
         System.Windows.Controls.ScrollViewer.SetVerticalScrollBarVisibility(steamGamesList,System.Windows.Controls.ScrollBarVisibility.Auto);
         steamPanel.Children.Add(steamGamesList);
-        steamPanel.Children.Add(new TextBlock{Text="Marque os jogos que deseja adicionar e clique em APLICAR.",Foreground=Brush("#9199A6"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,8,0,0)});
+        steamPanel.Children.Add(new TextBlock{Text="Marque os jogos que deseja adicionar e clique em APLICAR.",Foreground=Brush("#A5A29B"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,8,0,0)});
         steamTab.Content=steamPanel;
         launcherTabs.Items.Add(steamTab);
         AddRecognitionLauncherTab(launcherTabs,owner,"rockstar","Rockstar","Jogos instalados pelo Rockstar Games Launcher.");
         AddRecognitionLauncherTab(launcherTabs,owner,"ubisoft","Ubisoft","Jogos instalados pelo Ubisoft Connect.");
         AddRecognitionLauncherTab(launcherTabs,owner,"epic","Epic Games","Jogos instalados pela Epic Games Store.");
         recognitionPanel.Children.Add(launcherTabs);
-        recognitionPanel.Children.Add(new TextBlock{Text="Marque os jogos que deseja adicionar e clique em APLICAR.",Foreground=Brush("#9199A6"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(8,0,8,6)});
+        recognitionPanel.Children.Add(new TextBlock{Text="Marque os jogos que deseja adicionar e clique em APLICAR.",Foreground=Brush("#A5A29B"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(8,0,8,6)});
         recognitionTab.Content=recognitionPanel;
         tabs.Items.Add(editTab);tabs.Items.Add(recognitionTab);Root.Children.Add(tabs);
         createButton.Click+=(s,e)=>CreateGame();
@@ -153,20 +132,20 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
         RefreshAvailable();
         var gameActions=new Grid{Margin=new Thickness(0,6,0,0)};
         gameActions.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());gameActions.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition{Width=new GridLength(8)});gameActions.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());
-        transferPresetsButton=new Button{Content="TRANSFERIR PRESETS",Height=38,Background=Brush("#41464E"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(0),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};
+        transferPresetsButton=new Button{Content="Transferir presets",Height=48,Background=Brush("#343330"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(1),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};
         transferPresetsButton.Click+=(s,e)=>ChoosePresetTransfer();gameActions.Children.Add(transferPresetsButton);
-        deleteGameButton=new Button{Content="EXCLUIR JOGO",Height=38,Background=Brush("#982436"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(0),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};
+        deleteGameButton=new Button{Content="Excluir jogo",Height=48,Background=Brush("#55452A"),Foreground=System.Windows.Media.Brushes.White,BorderThickness=new Thickness(1),FontWeight=FontWeights.SemiBold,Cursor=System.Windows.Input.Cursors.Hand};
         deleteGameButton.Click+=(s,e)=>DeleteSelectedGame();Grid.SetColumn(deleteGameButton,2);gameActions.Children.Add(deleteGameButton);Root.Children.Add(gameActions);
-        AddButton("APLICAR",Save);AddButton("CANCELAR",()=>{DialogResult=false;});
+        AddButton("Aplicar",Save);AddButton("Cancelar",()=>{DialogResult=false;});
     }
 
     private void AddRecognitionLauncherTab(TabControl tabs,Window owner,string key,string header,string description)
     {
         var tab=new TabItem{Header=header,Tag=key,Style=(Style)owner.FindResource("DarkTabItemStyle")};
         var panel=new StackPanel{Margin=new Thickness(8)};
-        panel.Children.Add(new TextBlock{Text=description,Foreground=Brush("#AAB1BD"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,6)});
-        var status=new TextBlock{Text="Abra esta aba para procurar jogos instalados.",Foreground=Brush("#9199A6"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,8)};
-        var list=new System.Windows.Controls.ListBox{Background=Brush("#FF151B23"),Foreground=System.Windows.Media.Brushes.White,BorderBrush=Brush("#29313B"),MinHeight=80,MaxHeight=215};
+        panel.Children.Add(new TextBlock{Text=description,Foreground=Brush("#B5B1A8"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,6)});
+        var status=new TextBlock{Text="Abra esta aba para procurar jogos instalados.",Foreground=Brush("#A5A29B"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,8)};
+        var list=new System.Windows.Controls.ListBox{Background=Brush("#FF202022"),Foreground=System.Windows.Media.Brushes.White,BorderBrush=Brush("#333335"),MinHeight=80,MaxHeight=215};
         System.Windows.Controls.ScrollViewer.SetVerticalScrollBarVisibility(list,System.Windows.Controls.ScrollBarVisibility.Auto);
         panel.Children.Add(status);panel.Children.Add(list);tab.Content=panel;tabs.Items.Add(tab);
         launcherStatuses[key]=status;launcherGamesLists[key]=list;launcherSearchDone[key]=false;
@@ -197,7 +176,7 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
         RenameGameFrom=oldName;RenameGameTo=newName;
         List<string> games=gameSelector.Items.Cast<object>().Select(item=>item.ToString()).Select(name=>name.Equals(oldName,StringComparison.OrdinalIgnoreCase)?newName:name).ToList();
         gameSelector.ItemsSource=games;gameSelector.SelectedItem=newName;renameGameName.Text=newName;
-        gameSelector.IsEnabled=false;renameGameName.IsEnabled=false;renameGameButton.IsEnabled=false;renameGameButton.Content="NOME ALTERADO";deleteGameButton.IsEnabled=false;
+        gameSelector.IsEnabled=false;renameGameName.IsEnabled=false;renameGameButton.IsEnabled=false;renameGameButton.Content="Nome alterado";deleteGameButton.IsEnabled=false;
     }
     private void ChoosePresetTransfer()
     {
@@ -223,7 +202,7 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
         if(!accepted)return;
         TransferSourceGame=transfer.SourceGame;TransferTargetGame=transfer.TargetGame;TransferPresetsRequested=true;
         gameSelector.SelectedItem=TransferTargetGame;
-        transferPresetsButton.Content="TRANSFERÊNCIA PRONTA";transferPresetsButton.IsEnabled=false;
+        transferPresetsButton.Content="Transferido";transferPresetsButton.IsEnabled=false;
         deleteGameButton.IsEnabled=false;
     }
     private async void SearchSteamGames()
@@ -244,7 +223,7 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
             steamStatus.Text=games.Count==0
                 ?(result.SomeAppsCouldNotBeClassified?"Não foi possível confirmar os jogos pelos metadados locais da Steam.":"Nenhum jogo instalado da Steam foi encontrado.")
                 :games.Count+" jogo(s) encontrado(s)."+(result.SomeAppsCouldNotBeClassified?" Alguns itens não puderam ser confirmados.":" Selecione os que quer adicionar aos jogos do macro.");
-            if(games.Count==0)steamGamesList.Items.Add(new ListBoxItem{Content="Nenhum jogo encontrado",Foreground=Brush("#9199A6"),Background=System.Windows.Media.Brushes.Transparent});
+            if(games.Count==0)steamGamesList.Items.Add(new ListBoxItem{Content="Nenhum jogo encontrado",Foreground=Brush("#A5A29B"),Background=System.Windows.Media.Brushes.Transparent});
         }
         catch(Exception ex){steamSearchDone=false;steamStatus.Text="Não foi possível pesquisar os jogos da Steam: "+ex.Message;}
         finally{System.Windows.Input.Mouse.OverrideCursor=null;}
@@ -282,7 +261,7 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
                 status.Text=!result.LauncherDataFound
                     ?"Não foi possível localizar os dados locais desse launcher neste computador."
                     :"Nenhum jogo instalado foi confirmado nesse launcher."+(result.EntriesSkipped>0?" Alguns registros não puderam ser lidos.":string.Empty);
-                list.Items.Add(new ListBoxItem{Content="Nenhum jogo encontrado",Foreground=Brush("#9199A6"),Background=System.Windows.Media.Brushes.Transparent});
+                list.Items.Add(new ListBoxItem{Content="Nenhum jogo encontrado",Foreground=Brush("#A5A29B"),Background=System.Windows.Media.Brushes.Transparent});
             }
             else status.Text=result.Games.Count+" jogo(s) encontrado(s)."+(result.EntriesSkipped>0?" Alguns registros não puderam ser lidos.":" Marque os que deseja adicionar.");
         }
@@ -314,7 +293,7 @@ internal sealed class GamePresetOrganizerWindow : ButlerDialog
             var check=new System.Windows.Controls.CheckBox{Content=preset.Name,Tag=preset,Style=(Style)Owner.FindResource("ModernCheckStyle"),Margin=new Thickness(5,4,5,4),ToolTip="Preset antigo sem jogo atribuído"};
             check.Checked+=(s,e)=>UpdateSelectionToggleText();check.Unchecked+=(s,e)=>UpdateSelectionToggleText();availablePresets.Items.Add(check);
         }
-        if(availablePresets.Items.Count==0)availablePresets.Items.Add(new System.Windows.Controls.ListBoxItem{Content="Nenhum preset sem jogo para adicionar",Foreground=Brush("#9199A6"),Background=System.Windows.Media.Brushes.Transparent});
+        if(availablePresets.Items.Count==0)availablePresets.Items.Add(new System.Windows.Controls.ListBoxItem{Content="Nenhum preset sem jogo para adicionar",Foreground=Brush("#A5A29B"),Background=System.Windows.Media.Brushes.Transparent});
         selectionToggleButton.IsEnabled=availablePresets.Items.OfType<System.Windows.Controls.CheckBox>().Any();
         UpdateSelectionToggleText();
     }
@@ -372,16 +351,16 @@ internal sealed class PresetTransferWindow : ButlerDialog
         games=availableGames.Where(game=>!string.IsNullOrWhiteSpace(game)&&!PresetService.IsUncategorized(game)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         presets=allPresets;
         Heading("TRANSFERIR PRESETS","Mova todos os presets de um jogo para outro. O jogo de origem continuará cadastrado.");
-        Root.Children.Add(new TextBlock{Text="Jogo de origem",Foreground=Brush("#AAB1BD"),Margin=new Thickness(0,0,0,5)});
+        Root.Children.Add(new TextBlock{Text="Jogo de origem",Foreground=Brush("#B5B1A8"),Margin=new Thickness(0,0,0,5)});
         sourceSelector=new System.Windows.Controls.ComboBox{Style=(Style)resourceOwner.FindResource("ComboStyle"),ItemsSource=games};Root.Children.Add(sourceSelector);
-        Root.Children.Add(new TextBlock{Text="Jogo de destino",Foreground=Brush("#AAB1BD"),Margin=new Thickness(0,12,0,5)});
+        Root.Children.Add(new TextBlock{Text="Jogo de destino",Foreground=Brush("#B5B1A8"),Margin=new Thickness(0,12,0,5)});
         targetSelector=new System.Windows.Controls.ComboBox{Style=(Style)resourceOwner.FindResource("ComboStyle"),ItemsSource=games};Root.Children.Add(targetSelector);
-        preview=new TextBlock{Foreground=Brush("#9199A6"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,12,0,6)};Root.Children.Add(preview);
+        preview=new TextBlock{Foreground=Brush("#A5A29B"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,12,0,6)};Root.Children.Add(preview);
         sourceSelector.SelectionChanged+=(s,e)=>{EnsureDifferentTarget();RefreshPreview();};
         targetSelector.SelectionChanged+=(s,e)=>RefreshPreview();
         sourceSelector.SelectedItem=games.Contains(selectedGame,StringComparer.OrdinalIgnoreCase)?selectedGame:games.FirstOrDefault();
         EnsureDifferentTarget();RefreshPreview();
-        AddButton("TRANSFERIR PRESETS",ConfirmTransfer);AddButton("CANCELAR",()=>{DialogResult=false;});
+        AddButton("Transferir presets",ConfirmTransfer);AddButton("Cancelar",()=>{DialogResult=false;});
     }
 
     private void EnsureDifferentTarget()
@@ -431,9 +410,9 @@ internal sealed class DuplicateChoiceWindow : ButlerDialog
     internal DuplicateChoiceWindow(Window owner) : base("Importar presets", owner)
     {
         Heading("PRESETS EXISTENTES", "O arquivo pode conter categorias que já existem. Escolha como tratar esses itens.");
-        AddButton("SUBSTITUIR COM O ARQUIVO", () => { Mode = DuplicatePresetMode.Replace; DialogResult = true; });
-        AddButton("MANTER OS ATUAIS", () => { Mode = DuplicatePresetMode.Ignore; DialogResult = true; });
-        AddButton("CANCELAR", () => { DialogResult = false; });
+        AddButton("Substituir com o arquivo", () => { Mode = DuplicatePresetMode.Replace; DialogResult = true; });
+        AddButton("Manter os atuais", () => { Mode = DuplicatePresetMode.Ignore; DialogResult = true; });
+        AddButton("Cancelar", () => { DialogResult = false; });
     }
 }
 
@@ -443,7 +422,7 @@ internal sealed class BackupChooserWindow : ButlerDialog
     internal BackupChooserWindow(IList<PresetBackupInfo> backups, Window owner) : base("Histórico de backups", owner)
     {
         Heading("HISTÓRICO DE BACKUPS", "Selecione um estado salvo para restaurar.");
-        var list = new ListBox { Background = Brush("#FF151B23"), Foreground = Brushes.White, BorderBrush = Brush("#29313B"), MaxHeight = 270, MinHeight = 76, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+        var list = new ListBox { Background = Brush("#FF202022"), Foreground = Brushes.White, BorderBrush = Brush("#333335"), MaxHeight = 270, MinHeight = 76, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         foreach (PresetBackupInfo backup in backups)
         {
             var item = new ListBoxItem { Content = new TextBlock { Text = backup.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss", CultureInfo.CurrentCulture) + "   ·   " + Path.GetFileName(backup.FilePath), Foreground = Brushes.White, Padding = new Thickness(7, 3, 7, 3), TextWrapping = TextWrapping.Wrap }, Tag = backup, Padding = new Thickness(4, 6, 4, 6), Background = Brushes.Transparent };
@@ -451,7 +430,7 @@ internal sealed class BackupChooserWindow : ButlerDialog
         }
         if (list.Items.Count > 0) list.SelectedIndex = 0;
         Root.Children.Add(list);
-        AddButton("SELECIONAR BACKUP", () => { ListBoxItem selected = list.SelectedItem as ListBoxItem; SelectedBackup = selected == null ? null : selected.Tag as PresetBackupInfo; if (SelectedBackup != null) DialogResult = true; });
-        AddButton("CANCELAR", () => { DialogResult = false; });
+        AddButton("Selecionar backup", () => { ListBoxItem selected = list.SelectedItem as ListBoxItem; SelectedBackup = selected == null ? null : selected.Tag as PresetBackupInfo; if (SelectedBackup != null) DialogResult = true; });
+        AddButton("Cancelar", () => { DialogResult = false; });
     }
 }

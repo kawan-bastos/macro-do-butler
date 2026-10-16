@@ -14,7 +14,7 @@ namespace MacroDoButler
             instanceMutex = new Mutex(true, "MacroDoButler_UnicaInstancia_6B5E", out firstInstance);
             if (!firstInstance)
             {
-                MessageBox.Show("O programa já está aberto.", "Macro Do Butler", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("O programa já está aberto.", "Velqora", MessageBoxButton.OK, MessageBoxImage.Information);
                 Shutdown();
                 return;
             }
@@ -23,7 +23,7 @@ namespace MacroDoButler
             try { new MainWindow().Show(); }
             catch (Exception exception)
             {
-                MessageBox.Show("O Macro do Butler não conseguiu iniciar: " + exception.Message, "Falha ao iniciar", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("O Velqora não conseguiu iniciar: " + exception.Message, "Falha ao iniciar", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(-1);
             }
         }

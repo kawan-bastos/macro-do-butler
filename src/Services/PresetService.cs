@@ -172,7 +172,7 @@ internal sealed class PresetService
     internal void DeleteOne(Preset preset)
     {
         var all=new List<Preset>(LoadAll());
-        int index=all.FindIndex(p=>IdentityEquals(p,preset)&&p.PrimaryVertical==preset.PrimaryVertical&&p.PrimaryHorizontal==preset.PrimaryHorizontal&&p.SecondaryVertical==preset.SecondaryVertical&&p.SecondaryHorizontal==preset.SecondaryHorizontal&&p.IntervalMilliseconds==preset.IntervalMilliseconds&&p.RequireRightButton==preset.RequireRightButton);
+        int index=all.FindIndex(p=>IdentityEquals(p,preset)&&p.PrimaryVertical==preset.PrimaryVertical&&p.PrimaryHorizontal==preset.PrimaryHorizontal&&p.SecondaryVertical==preset.SecondaryVertical&&p.SecondaryHorizontal==preset.SecondaryHorizontal&&p.IntervalMilliseconds==preset.IntervalMilliseconds&&p.SecondaryIntervalMilliseconds==preset.SecondaryIntervalMilliseconds&&p.RequireRightButton==preset.RequireRightButton);
         if(index<0)index=all.FindIndex(p=>IdentityEquals(p,preset));
         if(index>=0){all.RemoveAt(index);ReplaceAll(all);}
     }

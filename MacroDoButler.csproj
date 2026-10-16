@@ -3,23 +3,28 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF>
-    <AssemblyName>Macro do Butler</AssemblyName>
+    <AssemblyName>Velqora</AssemblyName>
     <RootNamespace>MacroDoButler</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Version>3.2.0</Version>
-    <AssemblyVersion>3.2.0.0</AssemblyVersion>
-    <FileVersion>3.2.0.0</FileVersion>
-    <InformationalVersion>3.2.0</InformationalVersion>
-    <ApplicationIcon>assets\MacroDoButler.ico</ApplicationIcon>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Title>Velqora</Title>
+    <Product>Velqora</Product>
+    <Description>Utilitário configurável de controle de movimento</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);build-check\**;dist\**;.tools\**;tests\**</DefaultItemExcludes>
+    <ApplicationIcon>assets\Velqora.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="assets\MacroDoButler.png" />
-    <Compile Remove="build-check\UpdateHarness.cs" />
+    <Resource Include="assets\Velqora.png" />
+    <EmbeddedResource Include="assets\sounds\macro-toggle.wav" LogicalName="Velqora.Sounds.MacroToggle" />
+    <EmbeddedResource Include="assets\sounds\weapon-switch.wav" LogicalName="Velqora.Sounds.WeaponSwitch" />
+    <Compile Remove="build-check\**;tests\**;src\Properties\AssemblyInfo.cs" />
   </ItemGroup>
 </Project>

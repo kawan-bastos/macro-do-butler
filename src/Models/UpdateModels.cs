@@ -25,6 +25,7 @@ internal sealed class UpdateInfo
     internal DateTime? PublishedAt { get; set; }
     internal IList<string> ReleaseNotes { get; set; }
     internal string MinimumSupportedVersion { get; set; }
+    internal bool IsInstaller { get; set; }
 }
 
 internal enum UpdateResult { Current, Available, Downloaded, Installed, Cancelled, Failed }
@@ -38,7 +39,7 @@ internal class UpdateException : Exception
 internal sealed class UpdateRateLimitException : UpdateException
 {
     internal DateTime RetryAfterUtc { get; private set; }
-    internal UpdateRateLimitException(DateTime retryAfterUtc) : base("O limite de consultas do GitHub foi atingido.") { RetryAfterUtc=retryAfterUtc; }
+    internal UpdateRateLimitException(DateTime retryAfterUtc) : base("O serviço de atualizações limitou as consultas.") { RetryAfterUtc=retryAfterUtc; }
 }
 
 [DataContract]

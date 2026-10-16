@@ -12,7 +12,7 @@ internal sealed class PresetTransferService
     internal void Export(string path, IList<Preset> presets)
     {
         foreach (Preset preset in presets) if (!IsValidPreset(preset)) throw new InvalidDataException("Um preset atual contém valores inválidos e não pode ser exportado.");
-        var export = new PresetExportFile { FormatVersion = 2, Application = "Macro do Butler", ExportedAt = DateTime.Now, Presets = new List<Preset>(presets) };
+        var export = new PresetExportFile { FormatVersion = 2, Application = "Velqora", ExportedAt = DateTime.Now, Presets = new List<Preset>(presets) };
         string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
@@ -81,10 +81,11 @@ internal sealed class PresetTransferService
             preset.GameName.Trim().Length <= 100 && (preset.CharacterName == null || preset.CharacterName.Trim().Length <= 100) && (preset.WeaponName == null || preset.WeaponName.Trim().Length <= 100) &&
             preset.PrimaryVertical >= 0 && preset.PrimaryVertical <= 10000 && preset.PrimaryHorizontal >= -5000 && preset.PrimaryHorizontal <= 5000 &&
             preset.SecondaryVertical >= 0 && preset.SecondaryVertical <= 10000 && preset.SecondaryHorizontal >= -5000 && preset.SecondaryHorizontal <= 5000 &&
-            preset.IntervalMilliseconds >= 2 && preset.IntervalMilliseconds <= 50;
+            preset.IntervalMilliseconds >= 2 && preset.IntervalMilliseconds <= 50 &&
+            (!preset.SecondaryIntervalMilliseconds.HasValue || (preset.SecondaryIntervalMilliseconds.Value >= 2 && preset.SecondaryIntervalMilliseconds.Value <= 50));
     }
 
-    private static Preset Clone(Preset p) { return new Preset { GameName=p.GameName, CharacterName=p.CharacterName, WeaponName=p.WeaponName, WeaponSlot=p.WeaponSlot, Name = p.Name == null ? null : p.Name.Trim(), PrimaryVertical = p.PrimaryVertical, PrimaryHorizontal = p.PrimaryHorizontal, SecondaryVertical = p.SecondaryVertical, SecondaryHorizontal = p.SecondaryHorizontal, IntervalMilliseconds = p.IntervalMilliseconds, RequireRightButton = p.RequireRightButton, CreatedAt=p.CreatedAt, UpdatedAt=p.UpdatedAt }; }
+    private static Preset Clone(Preset p) { return new Preset { GameName=p.GameName, CharacterName=p.CharacterName, WeaponName=p.WeaponName, WeaponSlot=p.WeaponSlot, Name = p.Name == null ? null : p.Name.Trim(), PrimaryVertical = p.PrimaryVertical, PrimaryHorizontal = p.PrimaryHorizontal, SecondaryVertical = p.SecondaryVertical, SecondaryHorizontal = p.SecondaryHorizontal, IntervalMilliseconds = p.IntervalMilliseconds, SecondaryIntervalMilliseconds = p.SecondaryIntervalMilliseconds, RequireRightButton = p.RequireRightButton, CreatedAt=p.CreatedAt, UpdatedAt=p.UpdatedAt }; }
 }
 
 [DataContract]

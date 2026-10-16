@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Runtime.Serialization"/>
+    <Compile Include="PresetEditingTests.cs"/>
+    <Compile Include="..\src\Models\Preset.cs"/><Compile Include="..\src\Models\PresetEditDraft.cs"/>
+    <Compile Include="..\src\Models\PresetTransferModels.cs"/>
+    <Compile Include="..\src\Services\PresetService.cs"/><Compile Include="..\src\Services\PresetEditingService.cs"/>
+    <Compile Include="..\src\Services\PresetTransferService.cs"/><Compile Include="..\src\Services\PresetBackupService.cs"/>
+  </ItemGroup>
+</Project>

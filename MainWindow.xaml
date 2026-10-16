@@ -1,246 +1,953 @@
 <Window x:Class="MacroDoButler.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Macro Do Butler" Width="1180" Height="800" MinWidth="1000" MinHeight="700"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Icon="assets/Velqora.png" Title="Velqora" Width="1360" Height="860" MinWidth="1120" MinHeight="700"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
-        StateChanged="Window_StateChanged" Closed="Window_Closed" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown">
+        Closing="Window_Closing" Closed="Window_Closed" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown">
     <Window.Resources>
-        <Storyboard x:Key="BackgroundAnimation" RepeatBehavior="Forever" AutoReverse="True">
-            <ColorAnimation Storyboard.TargetName="GlowStop" Storyboard.TargetProperty="Color" From="#52101C" To="#8A1728" Duration="0:0:8" />
-            <DoubleAnimation Storyboard.TargetName="ShapeOneTransform" Storyboard.TargetProperty="X" From="-18" To="26" Duration="0:0:14" />
-            <DoubleAnimation Storyboard.TargetName="ShapeOneTransform" Storyboard.TargetProperty="Y" From="8" To="-16" Duration="0:0:11" />
-            <DoubleAnimation Storyboard.TargetName="ShapeTwoTransform" Storyboard.TargetProperty="Angle" From="-7" To="7" Duration="0:0:18" />
-            <DoubleAnimation Storyboard.TargetName="OrbTransform" Storyboard.TargetProperty="X" From="-28" To="24" Duration="0:0:16" />
-        </Storyboard>
+        <Style x:Key="SidebarNavigationButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Margin" Value="0,4,0,4" />
+            <Setter Property="Padding" Value="16,0,12,0" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Shell" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="4" /><ColumnDefinition Width="42" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Border x:Name="Indicator" Background="Transparent" CornerRadius="0,3,3,0" />
+                                <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{TemplateBinding Content}" VerticalAlignment="Center" FontSize="13" FontWeight="{TemplateBinding FontWeight}" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Shell" Property="Background" Value="#FF1A1A1B" /><Setter Property="Foreground" Value="{StaticResource TextBrush}" /></Trigger>
+                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Shell" Property="Background" Value="#302F2615" /><Setter TargetName="Shell" Property="BorderBrush" Value="#403926" /><Setter TargetName="Indicator" Property="Background" Value="{StaticResource AccentBrightBrush}" /><Setter Property="Foreground" Value="{StaticResource TextBrush}" /><Setter Property="FontWeight" Value="SemiBold" /></Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Shell" Property="BorderBrush" Value="{StaticResource AccentBrightBrush}" /></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <Border CornerRadius="20" BorderBrush="#53313B" BorderThickness="1" Background="#FF080B0F">
+    <Border CornerRadius="10" BorderBrush="#303639" BorderThickness="1" Background="{StaticResource BackgroundBrush}">
         <Border.Effect><DropShadowEffect Color="#D0000000" BlurRadius="34" ShadowDepth="10" Opacity="0.85" /></Border.Effect>
         <Grid ClipToBounds="True">
-            <Grid.Background>
-                <RadialGradientBrush Center="0.78,0.17" GradientOrigin="0.78,0.17" RadiusX="0.85" RadiusY="0.9">
-                    <GradientStop x:Name="GlowStop" Color="#52101C" Offset="0" />
-                    <GradientStop Color="#16090E" Offset="0.42" />
-                    <GradientStop Color="#080B0F" Offset="1" />
-                </RadialGradientBrush>
-            </Grid.Background>
+            <Grid.Background><SolidColorBrush Color="{StaticResource BackgroundColor}" /></Grid.Background>
 
-            <Canvas IsHitTestVisible="False" Opacity="0.5" ClipToBounds="True">
-                <Polygon Points="720,-80 1050,20 880,330 655,175" Fill="#351521" RenderTransformOrigin="0.5,0.5">
-                    <Polygon.RenderTransform><TranslateTransform x:Name="ShapeOneTransform" /></Polygon.RenderTransform>
-                </Polygon>
-                <Polygon Points="760,80 1010,220 850,410 695,250" Fill="#291018" Stroke="#4DE52B3D" StrokeThickness="1" RenderTransformOrigin="0.5,0.5">
-                    <Polygon.RenderTransform><RotateTransform x:Name="ShapeTwoTransform" /></Polygon.RenderTransform>
-                </Polygon>
-                <Ellipse Width="430" Height="430" Canvas.Left="-230" Canvas.Top="430" Opacity="0.3">
-                    <Ellipse.Fill><RadialGradientBrush><GradientStop Color="#60231728" /><GradientStop Color="#00151720" Offset="1" /></RadialGradientBrush></Ellipse.Fill>
-                    <Ellipse.RenderTransform><TranslateTransform x:Name="OrbTransform" /></Ellipse.RenderTransform>
-                </Ellipse>
-                <Path Data="M 0 590 L 120 540 L 250 610" Stroke="#35E52B3D" StrokeThickness="1" />
-                <Path Data="M 790 640 L 910 570 L 980 590" Stroke="#30FF3B4F" StrokeThickness="1" />
-            </Canvas>
 
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="232" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="56" /><RowDefinition Height="*" /></Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Background="#DB0B0F14" BorderBrush="#242B34" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Border Grid.Column="0" Grid.RowSpan="2" Background="#101517" BorderBrush="#FF292A2B" BorderThickness="0,0,1,0">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="104" /><RowDefinition Height="*" /><RowDefinition Height="72" /></Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal" Margin="22,0,12,0" VerticalAlignment="Center">
+                            <Image Source="assets/Velqora.png" Width="38" Height="38" Stretch="Uniform" />
+                            <TextBlock Text="Velqora" FontSize="20" FontWeight="SemiBold" Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Border Height="1" Background="#FF292A2B" VerticalAlignment="Bottom" Margin="20,0,16,0" IsHitTestVisible="False" />
+                        <StackPanel Grid.Row="1" Margin="10,16,10,0">
+                            <ToggleButton x:Name="PresetsNavigationButton" Content="Presets" IsChecked="True" Style="{StaticResource SidebarNavigationButtonStyle}" Click="PresetsNavigation_Click" AutomationProperties.Name="Presets">
+                                <ToggleButton.ContentTemplate><DataTemplate><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Viewbox Width="19" Height="19"><Canvas Width="24" Height="24"><Path Data="M 4,6 L 20,6 L 20,18 L 4,18 Z M 7,9 L 17,9 M 7,12 L 14,12 M 7,15 L 12,15" Stroke="{StaticResource AccentBrightBrush}" StrokeThickness="1.5" Fill="Transparent" /></Canvas></Viewbox></StackPanel></DataTemplate></ToggleButton.ContentTemplate>
+                            </ToggleButton>
+                            <ToggleButton x:Name="SettingsNavigationButton" Content="Configurações" Style="{StaticResource SidebarNavigationButtonStyle}" Click="SettingsNavigation_Click" AutomationProperties.Name="Configurações">
+                                <ToggleButton.ContentTemplate><DataTemplate><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Viewbox Width="19" Height="19"><Canvas Width="24" Height="24"><Path Data="M 22.340,10.177 L 22.340,13.823 L 19.727,14.071 L 18.928,16.000 L 20.601,18.023 L 18.023,20.601 L 16.000,18.928 L 14.071,19.727 L 13.823,22.340 L 10.177,22.340 L 9.929,19.727 L 8.000,18.928 L 5.977,20.601 L 3.399,18.023 L 5.072,16.000 L 4.273,14.071 L 1.660,13.823 L 1.660,10.177 L 4.273,9.929 L 5.072,8.000 L 3.399,5.977 L 5.977,3.399 L 8.000,5.072 L 9.929,4.273 L 10.177,1.660 L 13.823,1.660 L 14.071,4.273 L 16.000,5.072 L 18.023,3.399 L 20.601,5.977 L 18.928,8.000 L 19.727,9.929 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" StrokeThickness="1.6" StrokeLineJoin="Round" Fill="Transparent"/><Ellipse Canvas.Left="8.5" Canvas.Top="8.5" Width="7" Height="7" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" StrokeThickness="1.6"/></Canvas></Viewbox></StackPanel></DataTemplate></ToggleButton.ContentTemplate>
+                            </ToggleButton>
+                        </StackPanel>
+                        <StackPanel Grid.Row="2" Margin="20,0,16,18" VerticalAlignment="Bottom">
+                            <Border Height="1" Background="#FF292A2B" Margin="0,0,0,12" />
+                            <TextBlock Text="PERFIS DE CONTROLE" Foreground="{StaticResource MutedBrush}" FontSize="9" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Grid.Row="0" Background="#0E1214" BorderBrush="#2D2B27" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <Grid Margin="24,0,14,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Width="44" Height="44" CornerRadius="12" Background="#251016" BorderBrush="#85404B" BorderThickness="1">
-                                <Image Source="/assets/MacroDoButler.png" Margin="5" Stretch="Uniform" />
-                            </Border>
-                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="MACRO DO BUTLER" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock Text="Controle personalizado com presets em tempo real" Foreground="{StaticResource MutedBrush}" FontSize="11.5" Margin="0,4,0,0" />
-                            </StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" IsHitTestVisible="False">
+                            <TextBlock Text="CONTROLE DE PERFIS" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button x:Name="SettingsButton" Width="40" Height="34" Style="{StaticResource WindowControlButtonStyle}" Click="Settings_Click" ToolTip="Configurações" AutomationProperties.Name="Configurações">
-                                <Viewbox Width="19" Height="19" Stretch="Uniform">
-                                    <Grid Width="24" Height="24">
-                                        <Path Fill="#AAB1BD" Data="M19.14,12.94 C19.18,12.64 19.2,12.33 19.2,12 C19.2,11.67 19.18,11.36 19.13,11.06 L21.16,9.48 C21.34,9.34 21.39,9.09 21.27,8.88 L19.35,5.56 C19.23,5.35 18.98,5.27 18.76,5.36 L16.37,6.32 C15.88,5.93 15.33,5.61 14.74,5.38 L14.38,2.84 C14.35,2.6 14.14,2.42 13.9,2.42 L10.1,2.42 C9.86,2.42 9.65,2.6 9.62,2.84 L9.26,5.38 C8.67,5.61 8.12,5.93 7.63,6.32 L5.24,5.36 C5.02,5.27 4.77,5.35 4.65,5.56 L2.73,8.88 C2.61,9.09 2.66,9.34 2.84,9.48 L4.87,11.06 C4.82,11.36 4.8,11.67 4.8,12 C4.8,12.33 4.82,12.64 4.87,12.94 L2.84,14.52 C2.66,14.66 2.61,14.91 2.73,15.12 L4.65,18.44 C4.77,18.65 5.02,18.73 5.24,18.64 L7.63,17.68 C8.12,18.07 8.67,18.39 9.26,18.62 L9.62,21.16 C9.65,21.4 9.86,21.58 10.1,21.58 L13.9,21.58 C14.14,21.58 14.35,21.4 14.38,21.16 L14.74,18.62 C15.33,18.39 15.88,18.07 16.37,17.68 L18.76,18.64 C18.98,18.73 19.23,18.65 19.35,18.44 L21.27,15.12 C21.39,14.91 21.34,14.66 21.16,14.52 L19.14,12.94 Z" />
-                                        <Ellipse Width="7" Height="7" Fill="#DB0B0F14" Stroke="#AAB1BD" StrokeThickness="1.5" />
-                                    </Grid>
-                                </Viewbox>
-                            </Button>
+
                             <Button Content="—" Width="40" Height="34" Style="{StaticResource WindowControlButtonStyle}" FontSize="18" Click="Minimize_Click" />
                             <Button Content="×" Width="40" Height="34" Style="{StaticResource WindowControlButtonStyle}" FontSize="21" Click="Close_Click" />
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <Grid x:Name="MainPage" Grid.Row="1" Margin="28,18,28,20">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="350" /><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
-                    <StackPanel>
-                            <Border Style="{StaticResource CardStyle}">
-                                <StackPanel>
-                                    <TextBlock Text="PRESETS" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="12" />
-                                    <TextBlock Text="Gerencie suas configurações" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,18" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5"><TextBlock Text="Jogo" Foreground="{StaticResource MutedBrush}" FontSize="11" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Escolha o jogo cujos presets você quer visualizar ou editar." /></StackPanel>
-                                    <TextBlock x:Name="GameEmptyText" Text="Nenhum jogo cadastrado" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="2,0,0,3" Visibility="Collapsed" />
-                                    <ComboBox x:Name="GameSelector" Style="{StaticResource ComboStyle}" SelectionChanged="Organization_SelectionChanged" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,9,0,5"><TextBlock Text="Preset" Foreground="{StaticResource MutedBrush}" FontSize="11" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Selecione um preset para carregar os valores salvos. Depois de editar, clique em SALVAR para guardar as alterações." /></StackPanel>
-                                    <TextBlock x:Name="PresetEmptyText" Text="Nenhum preset neste jogo" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="2,0,0,3" Visibility="Collapsed" />
-                                    <ComboBox x:Name="PresetSelector" Style="{StaticResource ComboStyle}" SelectionChanged="PresetSelector_SelectionChanged" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,7"><TextBlock Text="Nome do preset" Foreground="{StaticResource MutedBrush}" FontSize="11" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Digite um nome para criar um preset ou renomear o selecionado. Clique em SALVAR para confirmar." /></StackPanel>
-                                    <TextBox x:Name="PresetName" Style="{StaticResource FieldStyle}" />
-                                    <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
-                                        <Button Content="SALVAR" Style="{StaticResource PrimaryButtonStyle}" Click="SavePreset_Click" />
-                                        <Button Grid.Column="2" Content="EXCLUIR" Style="{StaticResource SecondaryButtonStyle}" Click="DeletePreset_Click" />
-                                    </Grid>
-                                    <Button Content="EDITAR JOGO / PRESETS" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="EditCategory_Click" />
-                                    <TextBlock x:Name="FeedbackText" Foreground="#7EE2A8" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap" />
+                <Grid x:Name="MainPage" Grid.Column="1" Grid.Row="1" Margin="28,8,24,20">
+                    <Grid.Resources>
+                        <Style x:Key="PresetOutlineButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="#303639"/>
+                        </Style>
+                        <Style x:Key="PresetDeleteButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                            <Setter Property="Background" Value="#211719"/>
+                            <Setter Property="BorderBrush" Value="#71353A"/>
+                            <Setter Property="Foreground" Value="#F16C70"/>
+                        </Style>
+                        <Style x:Key="NewPresetButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#F5D184" Offset="0"/>
+                                        <GradientStop Color="#D5AB5C" Offset="0.6"/>
+                                        <GradientStop Color="#E6C174" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="BorderBrush" Value="#E8C57A"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                        <Style x:Key="BrowserItemStyle" TargetType="ListBoxItem">
+                            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Margin" Value="0,0,0,8"/>
+                            <Setter Property="Padding" Value="14"/>
+                            <Setter Property="Background" Value="#14191B"/>
+                            <Setter Property="BorderBrush" Value="#293034"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Surface" CornerRadius="8" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Surface" Property="Background" Value="#202326"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Surface" Property="BorderBrush" Value="#9F8144"/>
+                                                <Setter TargetName="Surface" Property="Background" Value="#29261F"/>
+                                            </Trigger>
+                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter TargetName="Surface" Property="BorderBrush" Value="{StaticResource AccentBrightBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <ItemsPanelTemplate x:Key="PresetListPanel">
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                        <ItemsPanelTemplate x:Key="PresetGridPanel">
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                        <DataTemplate x:Key="PresetBrowserTemplate">
+                            <Grid MinHeight="62">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
                                 </StackPanel>
-                            </Border>
-
-                            <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0">
-                                <StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <TextBlock Text="CONTROLE" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="12" />
-                                        <Border x:Name="StatusPill" Grid.Column="1" CornerRadius="10" Background="#342029" Padding="9,4"><TextBlock x:Name="StatusText" Text="DESLIGADO" Foreground="#9199A6" FontSize="10" FontWeight="SemiBold" /></Border>
-                                    </Grid>
-                                    <TextBlock x:Name="WeaponStatusText" Text="Arma ativa: Primária" FontSize="16" FontWeight="SemiBold" Margin="0,18,0,4" />
-                                    <TextBlock x:Name="HotkeySummary" Text="F1 liga/desliga  •  F2 alterna  •  F12 encerra" Foreground="{StaticResource MutedBrush}" FontSize="10.5" />
-                                    <Button x:Name="ToggleButton" Content="LIGAR · F1" Style="{StaticResource PrimaryButtonStyle}" Margin="0,18,0,0" Click="Toggle_Click" />
-                                    <Button x:Name="WeaponButton" Content="USAR SECUNDÁRIA · F2" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" Click="ToggleWeapon_Click" />
-                                </StackPanel>
-                            </Border>
-                    </StackPanel>
-                    </ScrollViewer>
-                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
+                                <Button Grid.Column="1" Style="{StaticResource PresetOutlineButtonStyle}" Padding="20,0" Height="48" Click="EditBrowserPreset_Click" VerticalAlignment="Center" AutomationProperties.Name="Editar preset">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="19" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="Editar" FontSize="14" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                        <Style x:Key="ViewModeStyle" TargetType="ToggleButton" BasedOn="{StaticResource SidebarNavigationButtonStyle}">
+                            <Setter Property="Width" Value="44"/>
+                            <Setter Property="Height" Value="38"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="ModeSurface" BorderBrush="#303639" BorderThickness="1" CornerRadius="4" Background="#14191B">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="ModeSurface" Property="Background" Value="#353020"/>
+                                                <Setter TargetName="ModeSurface" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource AccentBrightBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                                <Setter TargetName="ModeSurface" Property="BorderBrush" Value="{StaticResource AccentBrightBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Grid.Resources>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="PresetsPage_PreviewMouseWheel">
                         <StackPanel>
-                            <Border x:Name="PrimaryCard" Style="{StaticResource CardStyle}">
+                            <Grid Margin="0,0,0,18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,20,0">
+                                    <TextBlock Text="Presets" FontSize="36" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Organize e gerencie suas configurações" FontSize="16" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource NewPresetButtonStyle}" MinWidth="170" Click="NewBrowserPreset_Click" Width="194" Height="48" AutomationProperties.Name="Novo preset" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="19" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#201907"/>
+                                        <TextBlock Text="Novo preset" FontSize="14" VerticalAlignment="Center" Foreground="#201907"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <ComboBox x:Name="GameSelector" Style="{StaticResource ComboStyle}" SelectionChanged="Organization_SelectionChanged" AutomationProperties.Name="Selecionar jogo" Visibility="Collapsed" IsTabStop="False"/>
+                            <TextBlock x:Name="GameEmptyText" Text="Nenhum jogo cadastrado. Use Gerenciar jogos para começar." Foreground="{StaticResource MutedBrush}" Visibility="Collapsed" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                            <Grid Height="420" Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="235"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Border Style="{StaticResource CardStyle}" Padding="12">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Jogos" FontSize="19" FontWeight="SemiBold" Margin="4,2,0,14"/>
+                                        <ListBox x:Name="GamesList" Grid.Row="1" Background="Transparent" BorderThickness="0" SelectedValuePath="Name" ItemContainerStyle="{StaticResource BrowserItemStyle}" SelectionChanged="GamesList_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Jogos">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="42"/>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Width="34" Height="38" CornerRadius="4" Background="#242A2D" ClipToBounds="True">
+                                                            <Grid>
+                                                                <Path Data="M2,6 L6,2 L18,2 L22,6 L24,18 L20,20 L15,15 L9,15 L4,20 L0,18 Z M5,7 L5,13 M2,10 L8,10 M16,8 L16,9 M20,11 L20,12" Stroke="{StaticResource MutedBrush}" StrokeThickness="1.5" Width="24" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                    <Path.Style>
+                                                                        <Style TargetType="Path">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Path.Style>
+                                                                </Path>
+                                                                <Image Source="{Binding Icon}" Stretch="Uniform"/>
+                                                            </Grid>
+                                                        </Border>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Name}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="13" Margin="0,0,4,0"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding Count}" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <Button Grid.Row="2" Content="Gerenciar jogos" Style="{StaticResource PresetOutlineButtonStyle}" FontSize="14" Padding="16,0" Margin="0,8,0,0" Click="EditCategory_Click"/>
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="14">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Margin="0,0,12,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="38"/>
+                                                    <ColumnDefinition/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid Width="28" Height="32" Margin="0,0,10,0">
+                                                    <Path x:Name="GameHeaderFallback" Data="M2,6 L6,2 L18,2 L22,6 L24,18 L20,20 L15,15 L9,15 L4,20 L0,18 Z M5,7 L5,13 M2,10 L8,10 M16,8 L16,9 M20,11 L20,12" Stroke="{StaticResource MutedBrush}" StrokeThickness="1.5" Stretch="Uniform" Width="24" Height="20"/>
+                                                    <Image x:Name="GameHeaderIcon" Stretch="Uniform"/>
+                                                </Grid>
+                                                <TextBlock x:Name="PresetBrowserTitle" Text="Presets do jogo" FontSize="20" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0" Grid.Column="1"/>
+                                            </Grid>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <ToggleButton x:Name="ListViewButton" IsChecked="True" Style="{StaticResource ViewModeStyle}" Click="PresetViewMode_Click" ToolTip="Lista" AutomationProperties.Name="Visualização em lista">
+                                                    <Viewbox Width="18" Height="18">
+                                                        <Path Data="M2,4 L18,4 M2,10 L18,10 M2,16 L18,16" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                    </Viewbox>
+                                                </ToggleButton>
+                                                <ToggleButton x:Name="GridViewButton" Style="{StaticResource ViewModeStyle}" Click="PresetViewMode_Click" ToolTip="Grade" AutomationProperties.Name="Visualização em grade">
+                                                    <Viewbox Width="18" Height="18">
+                                                        <Path Data="M2,2 L8,2 L8,8 L2,8 Z M12,2 L18,2 L18,8 L12,8 Z M2,12 L8,12 L8,18 L2,18 Z M12,12 L18,12 L18,18 L12,18 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                                    </Viewbox>
+                                                </ToggleButton>
+                                            </StackPanel>
+                                        </Grid>
+                                        <ListBox x:Name="PresetBrowser" Grid.Row="1" Background="Transparent" BorderThickness="0" SelectedValuePath="Name" ItemContainerStyle="{StaticResource BrowserItemStyle}" ItemTemplate="{StaticResource PresetBrowserTemplate}" ItemsPanel="{StaticResource PresetListPanel}" SelectionChanged="PresetBrowser_SelectionChanged" SizeChanged="PresetBrowser_SizeChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" AutomationProperties.Name="Presets do jogo selecionado"/>
+                                        <TextBlock x:Name="PresetEmptyText" Grid.Row="1" Text="Nenhum preset neste jogo. Crie seu primeiro preset." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                            <Border Style="{StaticResource CardStyle}" Padding="18,14">
                                 <StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <StackPanel><TextBlock Text="ARMA PRIMÁRIA" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="12" /><TextBlock Text="Perfil principal" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,0" /></StackPanel>
-                                        <Border x:Name="PrimaryActiveBadge" Grid.Column="1" CornerRadius="10" Background="#5AE52B3D" Padding="10,5"><TextBlock Text="ATIVA" FontSize="10" FontWeight="SemiBold" /></Border>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="SelectedPresetTitle" Text="Selecione ou crie um preset" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0" TextTrimming="CharacterEllipsis"/>
+                                        <Button x:Name="DeleteSelectedPresetButton" Style="{StaticResource PresetDeleteButtonStyle}" Click="DeletePreset_Click" Margin="0" Height="48" AutomationProperties.Name="Excluir preset" Grid.Column="1" Padding="12,0">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="19" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#F16C70"/>
+                                                <TextBlock Text="Excluir" FontSize="14" VerticalAlignment="Center" Foreground="#F16C70"/>
+                                            </StackPanel>
+                                        </Button>
                                     </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,24,0,8"><TextBlock Text="Força vertical" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Define a velocidade do movimento vertical do mouse enquanto o macro está ativo. Valores maiores aumentam a força do movimento." /></StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="82" /></Grid.ColumnDefinitions>
-                                        <Slider x:Name="PrimaryVerticalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="0" Maximum="10000" Value="350" ValueChanged="Slider_ValueChanged" Tag="PrimaryVertical" Margin="0,0,14,0" />
-                                        <TextBox x:Name="PrimaryVerticalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="350" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus" />
+                                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,10,0,12"/>
+                                    <Grid x:Name="SelectedPresetSummary" Margin="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="0,0,18,0">
+                                            <StackPanel>
+                                                <TextBlock Text="Força vertical" Foreground="{StaticResource MutedBrush}" FontSize="13"/>
+                                                <TextBlock Text="{Binding Text, ElementName=PrimaryVerticalText, StringFormat={}{0} px/s}" FontSize="27" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="1" BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="20,0,18,0">
+                                            <StackPanel>
+                                                <TextBlock Text="Correção lateral" Foreground="{StaticResource MutedBrush}" FontSize="13"/>
+                                                <TextBlock Text="{Binding Text, ElementName=PrimaryHorizontalText, StringFormat={}{0} px/s}" FontSize="27" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="2" BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="20,0,12,0">
+                                            <StackPanel>
+                                                <TextBlock Text="Arma primária" FontSize="13"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                    <Viewbox Width="42" Height="22" Margin="0,0,12,0">
+                                                        <Path Data="M0,12 L9,12 L13,8 L34,8 L34,6 L38,6 L38,8 L52,8 L52,10 L37,10 L37,14 L30,14 L27,24 L21,23 L23,14 L19,14 L16,21 L12,20 L14,13 L9,14 L3,17 L0,17 Z M20,5 L30,5 L30,7 L20,7 Z" Fill="{Binding Foreground, ElementName=SummaryPrimaryState}"/>
+                                                    </Viewbox>
+                                                    <TextBlock x:Name="SummaryPrimaryState" Text="Ativada" FontSize="13" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="3" Padding="20,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="Arma secundária" FontSize="13"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                    <Viewbox Width="29" Height="22" Margin="0,0,12,0">
+                                                        <Path Data="M3,4 L34,4 L36,8 L33,12 L23,12 L17,27 L8,27 L12,13 L6,13 L6,10 L2,10 Z M22,13 L28,13 L28,17 L20,17 L21,15 L26,15 L26,14 L22,14 Z" Fill="{Binding Foreground, ElementName=SummarySecondaryState}"/>
+                                                    </Viewbox>
+                                                    <TextBlock x:Name="SummarySecondaryState" Text="Desativada" FontSize="13" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
                                     </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,20,0,8"><TextBlock Text="Correção lateral" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Ajusta o movimento horizontal do mouse. Use valores positivos para a direita e negativos para a esquerda." /></StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="82" /></Grid.ColumnDefinitions>
-                                        <Slider x:Name="PrimaryHorizontalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="-5000" Maximum="5000" Value="0" ValueChanged="Slider_ValueChanged" Tag="PrimaryHorizontal" Margin="0,0,14,0" />
-                                        <TextBox x:Name="PrimaryHorizontalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="0" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus" />
-                                    </Grid>
+                                    <TextBlock x:Name="FeedbackText" Foreground="#7EE2A8" TextWrapping="Wrap" Margin="0,8,0,0">
+                                        <TextBlock.Style>
+                                            <Style xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Text" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
-
-                            <Border x:Name="SecondaryCard" Style="{StaticResource CardStyle}" Margin="0,18,0,0" Opacity="0.78">
-                                <StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <StackPanel><TextBlock Text="ARMA SECUNDÁRIA" Foreground="#FF8C99" FontWeight="SemiBold" FontSize="12" /><TextBlock Text="Perfil alternativo" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,0" /></StackPanel>
-                                        <Border x:Name="SecondaryActiveBadge" Grid.Column="1" CornerRadius="10" Background="#252B34" Padding="10,5"><TextBlock Text="INATIVA" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" /></Border>
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,24,0,8"><TextBlock Text="Força vertical" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Define a velocidade vertical usada quando a arma secundária está ativa. Valores maiores aumentam a força do movimento." /></StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="82" /></Grid.ColumnDefinitions>
-                                        <Slider x:Name="SecondaryVerticalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="0" Maximum="10000" Value="0" ValueChanged="Slider_ValueChanged" Tag="SecondaryVertical" Margin="0,0,14,0" />
-                                        <TextBox x:Name="SecondaryVerticalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="0" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus" />
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Margin="0,20,0,8"><TextBlock Text="Correção lateral" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Ajusta o movimento horizontal da arma secundária. Use valores positivos para a direita e negativos para a esquerda." /></StackPanel>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="82" /></Grid.ColumnDefinitions>
-                                        <Slider x:Name="SecondaryHorizontalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="-5000" Maximum="5000" Value="0" ValueChanged="Slider_ValueChanged" Tag="SecondaryHorizontal" Margin="0,0,14,0" />
-                                        <TextBox x:Name="SecondaryHorizontalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="0" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus" />
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0" Padding="18">
-                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="6" /><ColumnDefinition Width="14" /><ColumnDefinition /></Grid.ColumnDefinitions>
-                                    <Border CornerRadius="3" Background="{StaticResource AccentBrush}" />
-                                    <StackPanel Grid.Column="2"><TextBlock Text="AJUSTE PROPORCIONAL" FontWeight="SemiBold" FontSize="11" /><TextBlock Text="Os valores utilizam pixels por segundo, mantendo a intensidade consistente ao alterar o intervalo." Foreground="{StaticResource MutedBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0" /></StackPanel>
-                                </Grid>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Visibility="Collapsed">
+                                <Expander x:Name="PresetEditor" Header="Ajustes do preset" Foreground="{StaticResource TextBrush}" Margin="0">
+                                    <StackPanel Margin="0,14,0,0">
+                                        <TextBlock Text="Nome do preset" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,6"/>
+                                        <TextBox x:Name="PresetName" Style="{StaticResource FieldStyle}"/>
+                                        <ComboBox x:Name="PresetSelector" Visibility="Collapsed" SelectionChanged="PresetSelector_SelectionChanged"/>
+                                        <Grid Margin="0,16,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border x:Name="PrimaryCard" Style="{StaticResource CardStyle}">
+                                                <StackPanel>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel>
+                                                            <TextBlock Text="Arma primária" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold" FontSize="15"/>
+                                                            <TextBlock Text="Perfil principal" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,0"/>
+                                                        </StackPanel>
+                                                        <Border x:Name="PrimaryActiveBadge" Grid.Column="1" CornerRadius="10" Background="#453E3220" Padding="10,5">
+                                                            <TextBlock Text="ATIVA" FontSize="10" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </Grid>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,24,0,8">
+                                                        <TextBlock Text="Força vertical" VerticalAlignment="Center"/>
+                                                        <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Define a velocidade do movimento vertical do mouse enquanto o macro está ativo. Valores maiores aumentam a força do movimento."/>
+                                                    </StackPanel>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition Width="82"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Slider x:Name="PrimaryVerticalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="0" Maximum="10000" Value="350" ValueChanged="Slider_ValueChanged" Tag="PrimaryVertical" Margin="0,0,14,0"/>
+                                                        <TextBox x:Name="PrimaryVerticalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="350" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus"/>
+                                                    </Grid>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,20,0,8">
+                                                        <TextBlock Text="Correção lateral" VerticalAlignment="Center"/>
+                                                        <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Ajusta o movimento horizontal do mouse. Use valores positivos para a direita e negativos para a esquerda."/>
+                                                    </StackPanel>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition Width="82"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Slider x:Name="PrimaryHorizontalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="-5000" Maximum="5000" Value="0" ValueChanged="Slider_ValueChanged" Tag="PrimaryHorizontal" Margin="0,0,14,0"/>
+                                                        <TextBox x:Name="PrimaryHorizontalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="0" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,22,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition/>
+                                                            <ColumnDefinition Width="82"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock Text="Intervalo (ms)" VerticalAlignment="Center"/>
+                                                            <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Tempo em milissegundos entre os ciclos desta arma. Salvo junto ao preset."/>
+                                                        </StackPanel>
+                                                        <TextBox x:Name="IntervalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="7" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus"/>
+                                                    </Grid>
+                                                    <Slider x:Name="IntervalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="2" Maximum="50" Value="7" Margin="0,10,0,16" ValueChanged="Slider_ValueChanged" Tag="Interval"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="2">
+                                                <Border x:Name="SecondaryCard" Style="{StaticResource CardStyle}" Margin="0" Opacity="0.78">
+                                                    <StackPanel>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel>
+                                                                <TextBlock Text="Arma secundária" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold" FontSize="15"/>
+                                                                <TextBlock Text="Perfil alternativo" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,0"/>
+                                                            </StackPanel>
+                                                            <Border x:Name="SecondaryActiveBadge" Grid.Column="1" CornerRadius="10" Background="#272624" Padding="10,5">
+                                                                <TextBlock Text="INATIVA" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold"/>
+                                                            </Border>
+                                                        </Grid>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,24,0,8">
+                                                            <TextBlock Text="Força vertical" VerticalAlignment="Center"/>
+                                                            <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Define a velocidade vertical usada quando a arma secundária está ativa. Valores maiores aumentam a força do movimento."/>
+                                                        </StackPanel>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition/>
+                                                                <ColumnDefinition Width="82"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Slider x:Name="SecondaryVerticalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="0" Maximum="10000" Value="0" ValueChanged="Slider_ValueChanged" Tag="SecondaryVertical" Margin="0,0,14,0"/>
+                                                            <TextBox x:Name="SecondaryVerticalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="0" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus"/>
+                                                        </Grid>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,20,0,8">
+                                                            <TextBlock Text="Correção lateral" VerticalAlignment="Center"/>
+                                                            <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Ajusta o movimento horizontal da arma secundária. Use valores positivos para a direita e negativos para a esquerda."/>
+                                                        </StackPanel>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition/>
+                                                                <ColumnDefinition Width="82"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Slider x:Name="SecondaryHorizontalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="-5000" Maximum="5000" Value="0" ValueChanged="Slider_ValueChanged" Tag="SecondaryHorizontal" Margin="0,0,14,0"/>
+                                                            <TextBox x:Name="SecondaryHorizontalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="0" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus"/>
+                                                        </Grid>
+                                                        <Grid Margin="0,22,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition/>
+                                                                <ColumnDefinition Width="82"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <TextBlock Text="Intervalo (ms)" VerticalAlignment="Center"/>
+                                                                <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Tempo em milissegundos entre os ciclos desta arma. Salvo junto ao preset."/>
+                                                            </StackPanel>
+                                                            <TextBox x:Name="SecondaryIntervalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="7" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus"/>
+                                                        </Grid>
+                                                        <Slider x:Name="SecondaryIntervalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="2" Maximum="50" Value="7" Margin="0,10,0,16" ValueChanged="Slider_ValueChanged" Tag="SecondaryInterval"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Border>
+                                        </Grid>
+                                        <Grid Margin="0,8,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Margin="0,0,16,0">
+                                                <TextBlock x:Name="WeaponStatusText" Text="Arma ativa: Primária" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                                <TextBlock x:Name="HotkeySummary" Text="F1 liga/desliga  •  F2 alterna  •  F12 encerra" Foreground="{StaticResource MutedBrush}" FontSize="10.5" Margin="0,0,0,5"/>
+                                                <Expander Header="Opções adicionais" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" FontSize="12">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,8,0,0">
+                                                        <CheckBox x:Name="RequireRight" Content="Exigir botão direito pressionado" IsChecked="True" Style="{StaticResource ModernCheckStyle}"/>
+                                                        <Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Aplica-se às duas armas deste preset. Salve na página Presets."/>
+                                                    </StackPanel>
+                                                </Expander>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Style="{StaticResource NewPresetButtonStyle}" MinWidth="170" Click="SavePreset_Click" Width="194" Height="48" AutomationProperties.Name="Salvar preset" VerticalAlignment="Top">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="19" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#201907"/>
+                                                    <TextBlock Text="Salvar preset" FontSize="14" VerticalAlignment="Center" Foreground="#201907"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
-                <Grid x:Name="SettingsPage" Grid.Row="1" Margin="38,24,38,26" Visibility="Collapsed">
-                    <Grid Width="900" MaxWidth="900" HorizontalAlignment="Center">
-                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <Grid Margin="0,0,0,20"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <StackPanel><TextBlock Text="CONFIGURAÇÕES" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="19" /><TextBlock Text="Preferências do aplicativo" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,0" /></StackPanel>
-                            <Button Grid.Column="1" Content="VOLTAR" Style="{StaticResource SecondaryButtonStyle}" Width="110" Click="Settings_Click" />
-                        </Grid>
-                        <TabControl Grid.Row="1" Style="{StaticResource DarkTabControlStyle}" ItemContainerStyle="{StaticResource DarkTabItemStyle}" Cursor="Arrow">
-                            <TabItem Header="ATALHOS">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
-                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="24,26">
-                                        <StackPanel>
-                                            <TextBlock Text="ATALHOS" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="14" />
-                                            <TextBlock Text="Atalhos globais, ativos também em segundo plano" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,18" TextWrapping="Wrap" />
-                                            <ItemsControl x:Name="HotkeyItems" />
-                                            <TextBlock x:Name="HotkeyCaptureStatus" Foreground="#FF8C99" FontSize="12" Margin="0,16,0,0" TextWrapping="Wrap" />
-                                            <TextBlock x:Name="HotkeyStatus" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap" />
-                                            <Button Content="RESTAURAR PADRÕES" Style="{StaticResource SecondaryButtonStyle}" Margin="0,22,0,0" Click="RestoreHotkeys_Click" />
-                                        </StackPanel>
-                                    </Border>
-                                </ScrollViewer>
-                            </TabItem>
-                            <TabItem Header="MACRO">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
-                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="24,26">
-                                        <StackPanel>
-                                            <TextBlock Text="CONFIGURAÇÕES DO MACRO" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="14" />
-                                            <TextBlock Text="O intervalo é geral e se aplica a todos os presets." Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,4" />
-                                            <Grid Margin="0,22,0,0"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="82" /></Grid.ColumnDefinitions>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="Intervalo" VerticalAlignment="Center" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Define o tempo, em milissegundos, entre os ciclos do macro. É uma configuração geral e vale para todos os presets." /></StackPanel>
-                                                <TextBox x:Name="IntervalText" Grid.Column="1" Style="{StaticResource FieldStyle}" Text="7" TextAlignment="Center" TextChanged="NumericText_TextChanged" LostFocus="NumericText_LostFocus" />
-                                            </Grid>
-                                            <Slider x:Name="IntervalSlider" Style="{StaticResource ModernSliderStyle}" Minimum="2" Maximum="50" Value="7" Margin="0,10,0,16" ValueChanged="Slider_ValueChanged" Tag="Interval" />
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><CheckBox x:Name="RequireRight" Content="Exigir botão direito pressionado" IsChecked="True" Style="{StaticResource ModernCheckStyle}" /><Button Content="?" Style="{StaticResource HelpIconButtonStyle}" ToolTip="Quando ativado, o macro só movimenta o mouse enquanto os botões esquerdo e direito estiverem pressionados." /></StackPanel>
-                                            <TextBlock x:Name="MacroSettingsStatus" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </Border>
-                                </ScrollViewer>
-                            </TabItem>
-                            <TabItem Header="DADOS E BACKUP">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
-                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="24,26">
-                                        <StackPanel>
-                                            <TextBlock Text="TRANSFERÊNCIA E BACKUP" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="14" />
-                                            <TextBlock Text="Exporte seus presets ou recupere uma cópia de segurança." Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,18" />
-                                            <Button Content="EXPORTAR PRESETS" Style="{StaticResource SecondaryButtonStyle}" Click="ExportPresets_Click" ToolTip="Salvar uma cópia de todos os presets em JSON." />
-                                            <Button Content="IMPORTAR PRESETS" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="ImportPresets_Click" ToolTip="Importar arquivos JSON ou CFG legados." />
-                                            <Button Content="CRIAR BACKUP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="CreateBackup_Click" ToolTip="Criar um backup do arquivo atual de presets." />
-                                            <Button Content="RESTAURAR BACKUP" Style="{StaticResource SecondaryButtonStyle}" Margin="0,8,0,0" Click="RestoreBackup_Click" ToolTip="Selecionar e restaurar um backup anterior." />
-                                            <TextBlock x:Name="TransferFeedbackText" Foreground="#7EE2A8" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </Border>
-                                </ScrollViewer>
-                            </TabItem>
-                            <TabItem Header="ATUALIZAÇÕES">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="24,26">
-                                        <StackPanel>
-                                            <TextBlock Text="ATUALIZAÇÕES" Foreground="{StaticResource AccentBrightBrush}" FontWeight="SemiBold" FontSize="14" />
-                                            <TextBlock Text="A versão atual e as novas versões são verificadas no GitHub Releases." Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap" />
-                                            <TextBlock x:Name="InstalledVersionText" Foreground="White" FontSize="12" />
-                                            <TextBlock x:Name="UpdateStatusText" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap" />
-                                            <TextBlock x:Name="LastUpdateCheckText" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="0,5,0,0" />
-                                            <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="100" Height="8" Margin="0,14,0,0" Visibility="Collapsed" />
-                                            <CheckBox x:Name="AutoUpdateCheck" Content="Verificar atualizações automaticamente" Style="{StaticResource ModernCheckStyle}" Margin="0,18,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
-                                            <CheckBox x:Name="OpenAfterUpdateCheck" Content="Abrir o aplicativo após atualizar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
-                                            <CheckBox x:Name="AskBeforeDownloadCheck" Content="Perguntar antes de baixar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
-                                            <CheckBox x:Name="AskBeforeInstallCheck" Content="Perguntar antes de instalar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
-                                            <CheckBox x:Name="KeepPreviousVersionCheck" Content="Manter uma cópia da versão anterior" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed" />
-                                            <TextBlock Text="Seus presets, atalhos e backups serão incluídos em um backup antes da instalação." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,15,0,0" TextWrapping="Wrap" />
-                                            <WrapPanel Margin="0,16,0,0">
-                                                <Button x:Name="CheckUpdatesButton" Content="VERIFICAR ATUALIZAÇÕES" Style="{StaticResource SecondaryButtonStyle}" Click="CheckUpdates_Click" />
-                                                <Button x:Name="DownloadUpdateButton" Content="BAIXAR ATUALIZAÇÃO" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" IsEnabled="False" Click="DownloadUpdate_Click" />
-                                                <Button x:Name="InstallUpdateButton" Content="INSTALAR AGORA" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" IsEnabled="False" Click="InstallUpdate_Click" />
-                                                <Button x:Name="CancelUpdateButton" Content="CANCELAR" Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" Visibility="Collapsed" Click="CancelUpdate_Click" />
-                                            </WrapPanel>
-                                        </StackPanel>
-                                    </Border>
-                                </ScrollViewer>
-                            </TabItem>
-                        </TabControl>
+                <Grid x:Name="EditorPage" Grid.Column="1" Grid.Row="1" Margin="28,8,24,20" Visibility="Collapsed">
+                    <Grid.Resources>
+                        <Style x:Key="EditorSaveButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+                            <Setter Property="Height" Value="48"/>
+                            <Setter Property="MinWidth" Value="194"/>
+                            <Setter Property="FontSize" Value="15"/>
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="EditorPageTitle" Text="Editar preset" FontSize="36" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="EditorPageSubtitle" Text="Ajuste os valores do perfil selecionado" FontSize="16" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Voltar a Presets" Style="{StaticResource SecondaryButtonStyle}" Click="EditorBack_Click" VerticalAlignment="Center" ToolTip="Voltar à lista mantendo o rascunho. Para continuar, clique em Editar no mesmo preset."/>
+                        </StackPanel>
                     </Grid>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1.5*"/>
+                                        <ColumnDefinition Width="24"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Nome do preset" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="0,0,0,10"/>
+                                        <TextBox x:Name="EditorName" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Style="{StaticResource FieldStyle}" FontSize="21" Height="50" MaxLength="100" AutomationProperties.Name="Nome do preset"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Jogo" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="0,0,0,10"/>
+                                        <Border Background="{StaticResource ElevatedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" MinHeight="50">
+                                            <TextBlock Text="{Binding GameName}" FontSize="16" TextWrapping="Wrap"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="24">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="ARMA PRIMÁRIA" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="1" Background="#25241C" BorderBrush="#49402C" BorderThickness="1" CornerRadius="15" Padding="10,6" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding Text, ElementName=SummaryPrimaryState}" FontSize="11" Foreground="{StaticResource AccentBrightBrush}"/>
+                                            </Border>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0"/>
+                                        <StackPanel Margin="0,22,0,0">
+                                            <TextBlock Text="Força vertical" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="88"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Style="{StaticResource ModernSliderStyle}" Minimum="0" Maximum="10000" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding PrimaryVertical, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Força vertical"/>
+                                                <TextBox Grid.Column="2" Style="{StaticResource FieldStyle}" Height="46" FontSize="18" TextAlignment="Center" Text="{Binding PrimaryVertical, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Força vertical em px/s"/>
+                                                <TextBlock Grid.Column="3" Text="px/s" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,22,0,0">
+                                            <TextBlock Text="Correção lateral" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="88"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Style="{StaticResource ModernSliderStyle}" Minimum="-5000" Maximum="5000" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding PrimaryHorizontal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Correção lateral"/>
+                                                <TextBox Grid.Column="2" Style="{StaticResource FieldStyle}" Height="46" FontSize="18" TextAlignment="Center" Text="{Binding PrimaryHorizontal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Correção lateral em px/s"/>
+                                                <TextBlock Grid.Column="3" Text="px/s" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,26,0,0"/>
+                                        <StackPanel Margin="0,22,0,0">
+                                            <TextBlock Text="Intervalo" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="88"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Style="{StaticResource ModernSliderStyle}" Minimum="{Binding MinimumInterval}" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding PrimaryInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Intervalo"/>
+                                                <TextBox Grid.Column="2" Style="{StaticResource FieldStyle}" Height="46" FontSize="18" TextAlignment="Center" Text="{Binding PrimaryInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Intervalo em ms"/>
+                                                <TextBlock Grid.Column="3" Text="ms" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="24">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="ARMA SECUNDÁRIA" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="1" Background="#25241C" BorderBrush="#49402C" BorderThickness="1" CornerRadius="15" Padding="10,6" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding Text, ElementName=SummarySecondaryState}" FontSize="11" Foreground="{StaticResource AccentBrightBrush}"/>
+                                            </Border>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0"/>
+                                        <StackPanel Margin="0,22,0,0">
+                                            <TextBlock Text="Força vertical" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="88"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Style="{StaticResource ModernSliderStyle}" Minimum="0" Maximum="10000" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding SecondaryVertical, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Força vertical"/>
+                                                <TextBox Grid.Column="2" Style="{StaticResource FieldStyle}" Height="46" FontSize="18" TextAlignment="Center" Text="{Binding SecondaryVertical, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Força vertical em px/s"/>
+                                                <TextBlock Grid.Column="3" Text="px/s" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,22,0,0">
+                                            <TextBlock Text="Correção lateral" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="88"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Style="{StaticResource ModernSliderStyle}" Minimum="-5000" Maximum="5000" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding SecondaryHorizontal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Correção lateral"/>
+                                                <TextBox Grid.Column="2" Style="{StaticResource FieldStyle}" Height="46" FontSize="18" TextAlignment="Center" Text="{Binding SecondaryHorizontal, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Correção lateral em px/s"/>
+                                                <TextBlock Grid.Column="3" Text="px/s" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,26,0,0"/>
+                                        <StackPanel Margin="0,22,0,0">
+                                            <TextBlock Text="Intervalo" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="88"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Style="{StaticResource ModernSliderStyle}" Minimum="{Binding MinimumInterval}" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding SecondaryInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Intervalo"/>
+                                                <TextBox Grid.Column="2" Style="{StaticResource FieldStyle}" Height="46" FontSize="18" TextAlignment="Center" Text="{Binding SecondaryInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" AutomationProperties.Name="Intervalo em ms"/>
+                                                <TextBlock Grid.Column="3" Text="ms" Foreground="{StaticResource MutedBrush}" FontSize="14" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0">
+                                <StackPanel>
+                                    <CheckBox Content="Exigir botão direito pressionado" IsChecked="{Binding RequireRight, Mode=TwoWay}" Style="{StaticResource ModernCheckStyle}" FontSize="14"/>
+                                    <TextBlock Text="Aplica-se às duas armas deste preset." Foreground="{StaticResource MutedBrush}" Margin="30,6,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <Grid Grid.Row="2" Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="EditorFeedback" Foreground="#EF8390" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,18,0"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Cancelar" Style="{StaticResource SecondaryButtonStyle}" Height="48" MinWidth="140" Margin="0,0,16,0" Click="EditorCancel_Click"/>
+                            <Button Content="Salvar alterações" Style="{StaticResource EditorSaveButtonStyle}" Click="EditorSave_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+                <Grid x:Name="SettingsPage" Grid.Column="1" Grid.Row="1" Margin="28,8,20,20" Visibility="Collapsed">
+                    <Grid.Resources>
+                        <SolidColorBrush x:Key="CardBrush" Color="#121212"/>
+                        <SolidColorBrush x:Key="ElevatedBrush" Color="#202020"/>
+                        <SolidColorBrush x:Key="BorderBrush" Color="#323232"/>
+                        <SolidColorBrush x:Key="AccentBrightBrush" Color="#E8BD72"/>
+                        <Style x:Key="SettingsCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+                            <Setter Property="Background" Value="#121212"/>
+                            <Setter Property="BorderBrush" Value="#323232"/>
+                            <Setter Property="CornerRadius" Value="9"/>
+                            <Setter Property="Padding" Value="22"/>
+                            <Setter Property="Margin" Value="0,0,16,16"/>
+                            <Setter Property="VerticalAlignment" Value="Top"/>
+                        </Style>
+                        <Style x:Key="SettingsNoteStyle" TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+                            <Setter Property="TextWrapping" Value="Wrap"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="LineHeight" Value="19"/>
+                        </Style>
+                        <Style x:Key="SettingsFeedbackStyle" TargetType="TextBlock">
+                            <Setter Property="TextWrapping" Value="Wrap"/>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Margin="8,0,0,22">
+                        <TextBlock Text="Configurações" FontSize="36" FontWeight="SemiBold"/>
+                        <TextBlock Text="Personalize o comportamento e as preferências do Velqora." Foreground="{StaticResource MutedBrush}" FontSize="15" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="InnerScrollViewer_PreviewMouseWheel">
+                        <Grid x:Name="SettingsCards" SizeChanged="SettingsCards_SizeChanged">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel x:Name="SettingsLeftColumn">
+                                <Border Style="{StaticResource SettingsCardStyle}" Tag="0">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,18">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="23" Foreground="{StaticResource AccentBrightBrush}" Margin="0,3,0,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Atalhos globais" FontSize="19" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Configure os atalhos que funcionam em qualquer aplicativo." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,8"/>
+                                        <ItemsControl x:Name="HotkeyItems">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,10">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="76"/>
+                                                                <ColumnDefinition Width="12"/>
+                                                                <ColumnDefinition Width="112"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,10,0" FontSize="13"/>
+                                                            <Border Grid.Column="1" Background="{StaticResource ElevatedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="4,8">
+                                                                <TextBlock Text="{Binding Value, TargetNullValue=Desativado}" TextWrapping="Wrap" TextAlignment="Center" FontSize="12" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <Button Grid.Column="3" Content="Alterar" Style="{StaticResource SecondaryButtonStyle}" Height="48" Padding="8,0" Click="ChangeHotkey_Click" AutomationProperties.Name="{Binding Label}"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBlock x:Name="HotkeyCaptureStatus" Foreground="#D9C69E" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap" Style="{StaticResource SettingsFeedbackStyle}"/>
+                                        <TextBlock x:Name="HotkeyStatus" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap" Style="{StaticResource SettingsFeedbackStyle}"/>
+                                        <Button Content="Restaurar atalhos padrão" Style="{StaticResource SecondaryButtonStyle}" Margin="0,22,0,0" Click="RestoreHotkeys_Click"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingsCardStyle}" Tag="1">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,18">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="23" Foreground="{StaticResource AccentBrightBrush}" Margin="0,3,0,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Aparência" FontSize="19" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Identidade visual do aplicativo." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,8"/>
+                                        <Grid Margin="38,12,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Tema atual" VerticalAlignment="Center" FontSize="14" Margin="0,0,18,0"/>
+                                            <Border Grid.Column="1" Background="{StaticResource ElevatedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14,10">
+                                                <TextBlock Text="Preto e dourado"/>
+                                            </Border>
+                                        </Grid>
+                                        <TextBlock Text="Este é o tema disponível nesta versão do Velqora." Style="{StaticResource SettingsNoteStyle}" Margin="38,0,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel x:Name="SettingsRightColumn" Grid.Column="1">
+                                <Border Style="{StaticResource SettingsCardStyle}" Tag="2">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,18">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="23" Foreground="{StaticResource AccentBrightBrush}" Margin="0,3,0,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Dados e segurança" FontSize="19" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Gerencie seus presets e cópias de segurança." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,8"/>
+                                        <Button Style="{StaticResource SettingsActionButtonStyle}" Click="ExportPresets_Click" ToolTip="Salvar uma cópia de todos os presets em JSON." AutomationProperties.Name="Exportar presets">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34"/>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrightBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="Exportar presets" VerticalAlignment="Center" FontSize="14"/>
+                                                <TextBlock Grid.Column="2" Text="" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}"/>
+                                            </Grid>
+                                        </Button>
+                                        <Button Style="{StaticResource SettingsActionButtonStyle}" Margin="0,8,0,0" Click="ImportPresets_Click" ToolTip="Importar arquivos JSON ou CFG legados." AutomationProperties.Name="Importar presets">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34"/>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrightBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="Importar presets" VerticalAlignment="Center" FontSize="14"/>
+                                                <TextBlock Grid.Column="2" Text="" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}"/>
+                                            </Grid>
+                                        </Button>
+                                        <Button Style="{StaticResource SettingsActionButtonStyle}" Margin="0,8,0,0" Click="CreateBackup_Click" ToolTip="Criar um backup do arquivo atual de presets." AutomationProperties.Name="Criar backup agora">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34"/>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrightBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="Criar backup agora" VerticalAlignment="Center" FontSize="14"/>
+                                                <TextBlock Grid.Column="2" Text="" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}"/>
+                                            </Grid>
+                                        </Button>
+                                        <Button Style="{StaticResource SettingsActionButtonStyle}" Margin="0,8,0,0" Click="RestoreBackup_Click" ToolTip="Selecionar e restaurar um backup anterior." AutomationProperties.Name="Restaurar backup">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34"/>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrightBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="Restaurar backup" VerticalAlignment="Center" FontSize="14"/>
+                                                <TextBlock Grid.Column="2" Text="" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}"/>
+                                            </Grid>
+                                        </Button>
+                                        <TextBlock x:Name="TransferFeedbackText" Foreground="#7EE2A8" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap" Style="{StaticResource SettingsFeedbackStyle}"/>
+                                        <TextBlock x:Name="UserDataPathText" Foreground="White" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,8"/>
+                                        <TextBlock Text="Seus presets e backups são armazenados localmente. Exporte uma cópia para guardá-los em outro local." Style="{StaticResource SettingsNoteStyle}" Margin="0,12,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingsCardStyle}" Tag="3">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,18">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="23" Foreground="{StaticResource AccentBrightBrush}" Margin="0,3,0,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Atualizações" FontSize="19" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Mantenha o Velqora na versão mais recente." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,8"/>
+                                        <TextBlock x:Name="InstalledVersionText" Foreground="White" FontSize="12"/>
+                                        <TextBlock x:Name="UpdateStatusText" Text="Nenhuma verificação realizada nesta sessão." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,8,0,0"/>
+                                        <TextBlock x:Name="LastUpdateCheckText" Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="0,5,0,0"/>
+                                        <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="100" Height="8" Foreground="{StaticResource AccentBrush}" Background="{StaticResource ElevatedBrush}" Margin="0,14,0,0" Visibility="Collapsed"/>
+                                        <CheckBox x:Name="AutoUpdateCheck" Content="Verificar atualizações automaticamente" Style="{StaticResource ModernCheckStyle}" Margin="0,18,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed"/>
+                                        <CheckBox x:Name="OpenAfterUpdateCheck" Content="Abrir o aplicativo após atualizar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed"/>
+                                        <CheckBox x:Name="AskBeforeDownloadCheck" Content="Perguntar antes de baixar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed"/>
+                                        <CheckBox x:Name="AskBeforeInstallCheck" Content="Perguntar antes de instalar" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed"/>
+                                        <CheckBox x:Name="KeepPreviousVersionCheck" Content="Manter uma cópia da versão anterior" Style="{StaticResource ModernCheckStyle}" Margin="0,9,0,0" Checked="UpdatePreference_Changed" Unchecked="UpdatePreference_Changed"/>
+                                        <TextBlock Text="Seus presets, atalhos e backups serão incluídos em um backup antes da instalação." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,15,0,0" TextWrapping="Wrap"/>
+                                        <WrapPanel Margin="0,16,0,0">
+                                            <Button x:Name="CheckUpdatesButton" Content="Verificar atualizações" Margin="0,0,8,8" Style="{StaticResource SecondaryButtonStyle}" Click="CheckUpdates_Click"/>
+                                            <Button x:Name="DownloadUpdateButton" Content="Baixar atualização" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8" IsEnabled="False" Click="DownloadUpdate_Click"/>
+                                            <Button x:Name="InstallUpdateButton" Content="Instalar agora" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8" IsEnabled="False" Click="InstallUpdate_Click"/>
+                                            <Button x:Name="CancelUpdateButton" Content="Cancelar" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Visibility="Collapsed" Click="CancelUpdate_Click"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingsCardStyle}" Tag="4">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,18">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="23" Foreground="{StaticResource AccentBrightBrush}" Margin="0,3,0,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Sobre o Velqora" FontSize="19" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Informações do aplicativo." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,0,0,8"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,10,0,16">
+                                            <Image Source="assets/Velqora.png" Width="48" Height="48" Stretch="Uniform" Margin="0,0,16,0"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="V E L Q O R A" Foreground="{StaticResource AccentBrightBrush}" FontSize="14"/>
+                                                <TextBlock Text="{Binding Text, ElementName=InstalledVersionText}" Style="{StaticResource SettingsNoteStyle}" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <TextBlock Text="Utilitário configurável de controle de movimento." Style="{StaticResource SettingsNoteStyle}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+                    <TextBlock Grid.Row="2" Text="Preferências de atualização e atalhos são salvos automaticamente. Ajustes das armas são salvos no preset." Style="{StaticResource SettingsNoteStyle}" Margin="8,8,16,0"/>
                 </Grid>
             </Grid>
         </Grid>

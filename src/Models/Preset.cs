@@ -27,6 +27,8 @@ internal sealed class Preset
     public int SecondaryHorizontal { get; set; }
     [DataMember(Name="intervalMilliseconds")]
     public int IntervalMilliseconds { get; set; }
+    [DataMember(Name="secondaryIntervalMilliseconds", EmitDefaultValue=false)]
+    public int? SecondaryIntervalMilliseconds { get; set; }
     [DataMember(Name="requireRightButton")]
     public bool RequireRightButton { get; set; }
     [DataMember(Name="createdAt")]

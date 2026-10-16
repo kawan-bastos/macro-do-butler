@@ -3,6 +3,6 @@
   <ItemGroup>
     <Reference Include="System.Net.Http"/><Reference Include="System.Runtime.Serialization"/>
     <Compile Include="build-check\UpdateHarness.cs"/><Compile Include="src\Models\Preset.cs"/><Compile Include="src\Models\HotkeySettings.cs"/>
-    <Compile Include="src\Models\UpdateModels.cs"/><Compile Include="src\Services\UpdateVersionComparer.cs"/><Compile Include="src\Services\UpdateDownloader.cs"/><Compile Include="src\Services\UpdateBackupService.cs"/><Compile Include="src\Services\UpdateInstaller.cs"/><Compile Include="src\Services\UpdatePreferencesStorageService.cs"/><Compile Include="src\Services\UpdateService.cs"/><Compile Include="src\Services\PresetTransferService.cs"/><Compile Include="src\Services\PresetService.cs"/><Compile Include="src\Services\PresetBackupService.cs"/><Compile Include="src\Models\PresetTransferModels.cs"/>
+    <Compile Include="src\Models\UpdateModels.cs"/><Compile Include="src\Services\UpdateVersionComparer.cs"/><Compile Include="src\Services\UpdateDownloader.cs"/><Compile Include="src\Services\UpdateBackupService.cs"/><Compile Include="src\Services\UpdateInstaller.cs"/><Compile Include="src\Services\SetupUpdateLauncher.cs"/><Compile Include="src\Services\UpdatePreferencesStorageService.cs"/><Compile Include="src\Services\UpdateService.cs"/><Compile Include="src\Services\PresetTransferService.cs"/><Compile Include="src\Services\PresetService.cs"/><Compile Include="src\Services\PresetBackupService.cs"/><Compile Include="src\Models\PresetTransferModels.cs"/>
   </ItemGroup>
 </Project>

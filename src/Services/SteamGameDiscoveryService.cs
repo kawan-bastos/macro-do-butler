@@ -181,7 +181,7 @@ internal sealed class SteamGameDiscoveryService
         return value;
     }
 
-    private static IEnumerable<string> FindSteamRoots()
+    internal static IEnumerable<string> FindSteamRoots()
     {
         var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (RegistryHive hive in new[] { RegistryHive.CurrentUser, RegistryHive.LocalMachine })

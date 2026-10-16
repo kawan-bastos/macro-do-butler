@@ -13,3 +13,17 @@ presets.cfg
 presets.cfg.bak
 Thumbs.db
 Desktop.ini
+
+presets.json
+hotkeys.json
+settings.json
+macro-settings.json
+update-preferences.json
+backups/
+migration-backups/
+*.pfx
+*.p12
+*.key
+*.pem
+*.log
+.tools/

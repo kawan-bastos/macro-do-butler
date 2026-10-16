@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 internal sealed class UpdateDownloader
 {
     private static readonly HttpClient Client = CreateClient();
-    private static HttpClient CreateClient(){var c=new HttpClient();c.Timeout=TimeSpan.FromMinutes(10);c.DefaultRequestHeaders.UserAgent.ParseAdd("MacroDoButler-Updater/2.0");return c;}
+    private static HttpClient CreateClient(){var c=new HttpClient();c.Timeout=TimeSpan.FromMinutes(10);c.DefaultRequestHeaders.UserAgent.ParseAdd("Velqora-Updater/3.2");return c;}
     internal async Task<string> DownloadAsync(UpdateInfo info, IProgress<double> progress, CancellationToken token)
     {
-        string target=Path.Combine(Path.GetTempPath(),"MacroDoButler_update_"+Guid.NewGuid().ToString("N")+".tmp");
+        if (string.IsNullOrWhiteSpace(info.Sha256) || !System.Text.RegularExpressions.Regex.IsMatch(info.Sha256, "\\A[0-9a-fA-F]{64}\\z"))
+            throw new UpdateException("A atualização não possui SHA-256 válido e não será executada.");
+        string target=Path.Combine(Path.GetTempPath(),"Velqora_update_"+Guid.NewGuid().ToString("N")+(info.IsInstaller?".exe":".tmp"));
         try
         {
             using(var response=await Client.GetAsync(info.DownloadUrl,HttpCompletionOption.ResponseHeadersRead,token).ConfigureAwait(false))

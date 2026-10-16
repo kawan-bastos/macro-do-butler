@@ -1,10 +1,10 @@
+using System.Windows.Media.Animation;
 using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.IO;
 using Microsoft.Win32;
 using System.Linq;
@@ -35,9 +35,7 @@ namespace MacroDoButler
         private string hotkeyMessageText;
         private Preset selectedPreset;
         private bool updatingSelectors;
-        private bool loadingMacroSettings;
         private readonly string[] selectorEmptyText = { "Nenhum jogo cadastrado", "Nenhum preset neste jogo" };
-        private Storyboard backgroundAnimation;
         private volatile bool enabled;
         private volatile bool secondaryActive;
         private UpdateService updateService;
@@ -52,16 +50,17 @@ namespace MacroDoButler
 
         public MainWindow()
         {
+            string dataDirectory = UserDataService.Initialize();
             InitializeComponent();
-            hotkeyStorage = new HotkeyStorageService(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + System.IO.Path.DirectorySeparatorChar + "MacroDoButler");
+            hotkeyStorage = new HotkeyStorageService(dataDirectory);
             string hotkeyWarning; hotkeySettings=hotkeyStorage.Load(out hotkeyWarning);
-            macroSettingsStorage = new MacroSettingsStorageService(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + System.IO.Path.DirectorySeparatorChar + "MacroDoButler");
-            loadingMacroSettings=true;
+            macroSettingsStorage = new MacroSettingsStorageService(dataDirectory);
             IntervalSlider.Value=macroSettingsStorage.LoadInterval();
+            SecondaryIntervalSlider.Value=IntervalSlider.Value;
             IntervalText.Text=((int)IntervalSlider.Value).ToString();
-            loadingMacroSettings=false;
-            presetService = new PresetService(AppDomain.CurrentDomain.BaseDirectory);
-            string dataDirectory=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)+System.IO.Path.DirectorySeparatorChar+"MacroDoButler";
+            SecondaryIntervalText.Text=((int)SecondaryIntervalSlider.Value).ToString();
+            presetService = new PresetService(dataDirectory);
+            UserDataPathText.Text = "Dados: " + dataDirectory;
             updateService=new UpdateService(GetApplicationVersion(),Process.GetCurrentProcess().MainModule.FileName,dataDirectory);
             updatePreferencesStorage=new UpdatePreferencesStorageService(dataDirectory);updatePreferences=updatePreferencesStorage.Load();
             backupService = new PresetBackupService(presetService.FilePath);
@@ -70,13 +69,14 @@ namespace MacroDoButler
             inputService.ToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(Toggle)); };
             inputService.WeaponToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(ToggleWeapon)); };
             inputService.ExitRequested += delegate { Dispatcher.BeginInvoke(new Action(Close)); };
-            Loaded += delegate { RefreshHotkeyUi(); if(!string.IsNullOrEmpty(hotkeyWarning)) { HotkeyStatus.Text=hotkeyWarning; HotkeyStatus.Foreground=Brushes.Orange; } InitializeUpdateUi(); };
+            Loaded += delegate { RefreshHotkeyUi(); if(!string.IsNullOrEmpty(hotkeyWarning)) { HotkeyStatus.Text=hotkeyWarning; HotkeyStatus.Foreground=Brushes.Orange; } InitializeUpdateUi(); ImportPendingPresets(dataDirectory); };
 
             IList<Preset> initialPresets = presetService.LoadAll();
             RefreshOrganization(initialPresets.FirstOrDefault());
             if (initialPresets.Count == 0) { PrimaryVerticalSlider.Value=350; PrimaryHorizontalSlider.Value=0; SecondaryVerticalSlider.Value=0; SecondaryHorizontalSlider.Value=0; RequireRight.IsChecked=true; }
             UpdateStatus();
             UpdateWeaponStatus();
+            Loaded += LoadGameArtwork;
             inputService.Start();
         }
 
@@ -112,23 +112,26 @@ namespace MacroDoButler
         private void RefreshHotkeyUi()
         {
             if(HotkeyItems==null)return;
-            var rows=new[]{new HotkeyRow{Action="ToggleMacro",Label="Ligar/desligar macro",Description="Controla o estado ativo do macro",Value=hotkeySettings.ToggleMacro},new HotkeyRow{Action="SwitchWeapon",Label="Alternar arma",Description="Alterna entre primária e secundária",Value=hotkeySettings.SwitchWeapon},new HotkeyRow{Action="ExitApplication",Label="Fechar aplicativo",Description="Encerra o Macro do Butler",Value=hotkeySettings.ExitApplication},new HotkeyRow{Action="ShowWindow",Label="Mostrar janela",Description="Minimiza e restaura a interface",Value=hotkeySettings.ShowWindow}};
+            var rows=new[]{new HotkeyRow{Action="ToggleMacro",Label="Ligar/desligar macro",Description="Controla o estado ativo do macro",Value=hotkeySettings.ToggleMacro},new HotkeyRow{Action="SwitchWeapon",Label="Alternar arma",Description="Alterna entre primária e secundária",Value=hotkeySettings.SwitchWeapon},new HotkeyRow{Action="ExitApplication",Label="Fechar aplicativo",Description="Encerra o Velqora",Value=hotkeySettings.ExitApplication},new HotkeyRow{Action="ShowWindow",Label="Mostrar janela",Description="Minimiza e restaura a interface",Value=hotkeySettings.ShowWindow}};
             HotkeyItems.ItemsSource=rows;
-            HotkeyItems.ItemTemplate=CreateHotkeyTemplate();
-            ToggleButton.Content="LIGAR · "+hotkeySettings.ToggleMacro; WeaponButton.Content=(secondaryActive?"USAR PRIMÁRIA · ":"USAR SECUNDÁRIA · ")+hotkeySettings.SwitchWeapon;
             HotkeySummary.Text=hotkeySettings.ToggleMacro+" liga/desliga  •  "+hotkeySettings.SwitchWeapon+" alterna  •  "+hotkeySettings.ExitApplication+" encerra";
         }
-        private DataTemplate CreateHotkeyTemplate()
+        private bool? settingsSingleColumn;
+        private void SettingsCards_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            var template=new DataTemplate(typeof(HotkeyRow));
-            var root=new FrameworkElementFactory(typeof(DockPanel)); root.SetValue(DockPanel.LastChildFillProperty,true); root.SetValue(FrameworkElement.MarginProperty,new Thickness(0,0,0,14));
-            var details=new FrameworkElementFactory(typeof(StackPanel)); details.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center); details.SetValue(FrameworkElement.MarginProperty,new Thickness(0,0,18,0));
-            var title=new FrameworkElementFactory(typeof(TextBlock)); title.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding("Label")); title.SetValue(TextBlock.FontWeightProperty,FontWeights.SemiBold); title.SetValue(TextBlock.FontSizeProperty,13.0); details.AppendChild(title);
-            var desc=new FrameworkElementFactory(typeof(TextBlock)); desc.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding("Description")); desc.SetValue(TextBlock.ForegroundProperty,(Brush)FindResource("MutedBrush")); desc.SetValue(TextBlock.FontSizeProperty,11.0); desc.SetValue(TextBlock.MarginProperty,new Thickness(0,4,0,0)); details.AppendChild(desc);
-            var value=new FrameworkElementFactory(typeof(TextBlock)); value.SetBinding(TextBlock.TextProperty,new System.Windows.Data.Binding("Value"){TargetNullValue="DESATIVADO",FallbackValue="DESATIVADO"}); value.SetValue(TextBlock.ForegroundProperty,Brushes.White); value.SetValue(TextBlock.FontSizeProperty,12.0); value.SetValue(TextBlock.MarginProperty,new Thickness(0,8,0,0)); details.AppendChild(value);
-            var change=new FrameworkElementFactory(typeof(Button)); change.SetValue(Button.ContentProperty,"ALTERAR"); change.SetValue(Button.StyleProperty,FindResource("SecondaryButtonStyle")); change.SetValue(Button.WidthProperty,100.0); change.SetValue(Button.HeightProperty,40.0); change.SetValue(DockPanel.DockProperty,Dock.Right); change.SetValue(FrameworkElement.VerticalAlignmentProperty,VerticalAlignment.Center); change.AddHandler(Button.ClickEvent,new RoutedEventHandler(ChangeHotkey_Click)); root.AppendChild(change);
-            root.AppendChild(details); template.VisualTree=root; return template;
+            bool singleColumn = SettingsCards.ActualWidth < 820;
+            if (settingsSingleColumn == singleColumn) return;
+            settingsSingleColumn = singleColumn;
+            var cards = SettingsLeftColumn.Children.Cast<FrameworkElement>()
+                .Concat(SettingsRightColumn.Children.Cast<FrameworkElement>())
+                .OrderBy(card => int.Parse((string)card.Tag)).ToList();
+            SettingsLeftColumn.Children.Clear();
+            SettingsRightColumn.Children.Clear();
+            SettingsCards.ColumnDefinitions[1].Width = singleColumn ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+            foreach (var card in cards)
+                (singleColumn || int.Parse((string)card.Tag) < 2 ? SettingsLeftColumn : SettingsRightColumn).Children.Add(card);
         }
+
         private void ChangeHotkey_Click(object sender,RoutedEventArgs e)
         {
             var button=sender as Button; var row=button==null?null:button.DataContext as HotkeyRow; if(row==null)return;
@@ -189,13 +192,6 @@ namespace MacroDoButler
             hotkeyMessageTimer.Stop(); hotkeyMessageTarget=target; hotkeyMessageText=message; target.Text=message; target.Foreground=color; hotkeyMessageTimer.Start();
         }
 
-        protected override void OnContentRendered(EventArgs e)
-        {
-            base.OnContentRendered(e);
-            backgroundAnimation = (Storyboard)FindResource("BackgroundAnimation");
-            backgroundAnimation.Begin(this, true);
-        }
-
         private MovementSettings GetMovementSettings()
         {
             if (!Dispatcher.CheckAccess()) return Dispatcher.Invoke(new Func<MovementSettings>(GetMovementSettings));
@@ -205,7 +201,7 @@ namespace MacroDoButler
                 RequireRightButton = RequireRight.IsChecked == true,
                 HorizontalPixelsPerSecond = (int)(secondaryActive ? SecondaryHorizontalSlider.Value : PrimaryHorizontalSlider.Value),
                 VerticalPixelsPerSecond = (int)(secondaryActive ? SecondaryVerticalSlider.Value : PrimaryVerticalSlider.Value),
-                IntervalMilliseconds = Math.Max(2, (int)IntervalSlider.Value)
+                IntervalMilliseconds = Math.Max(2, (int)(secondaryActive ? SecondaryIntervalSlider.Value : IntervalSlider.Value))
             };
         }
 
@@ -227,6 +223,7 @@ namespace MacroDoButler
                 preset.SecondaryVertical = (int)SecondaryVerticalSlider.Value;
                 preset.SecondaryHorizontal = (int)SecondaryHorizontalSlider.Value;
                 preset.IntervalMilliseconds = (int)IntervalSlider.Value;
+                preset.SecondaryIntervalMilliseconds = (int)SecondaryIntervalSlider.Value;
                 preset.RequireRightButton = RequireRight.IsChecked == true;
                 backupService.CreateBackup();
                 organizationService.Save(presetService, preset);
@@ -283,6 +280,35 @@ namespace MacroDoButler
             catch (Exception exception) { ShowTransferFeedback("Importação cancelada: " + exception.Message, false); }
         }
 
+        private void ImportPendingPresets(string dataDirectory)
+        {
+            string pendingDirectory = Path.Combine(dataDirectory, "pending-imports");
+            if (!Directory.Exists(pendingDirectory)) return;
+            int imported = 0, ignored = 0;
+            foreach (string file in Directory.GetFiles(pendingDirectory).OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+            {
+                string extension = Path.GetExtension(file);
+                if (!extension.Equals(".json", StringComparison.OrdinalIgnoreCase) && !extension.Equals(".cfg", StringComparison.OrdinalIgnoreCase)) continue;
+                try
+                {
+                    ImportResult result = transferService.Import(file, presetService, selectedPreset == null ? null : selectedPreset.Name, DuplicatePresetMode.Ignore);
+                    imported += result.Imported;
+                    ignored += result.Ignored;
+                    File.Delete(file);
+                }
+                catch (Exception exception)
+                {
+                    ShowTransferFeedback("Não foi possível importar " + Path.GetFileName(file) + ": " + exception.Message + ". O arquivo foi preservado em " + pendingDirectory + ".", false);
+                    return;
+                }
+            }
+            if (imported > 0 || ignored > 0)
+            {
+                RefreshOrganization(presetService.LoadAll().FirstOrDefault());
+                ShowTransferFeedback("Presets da instalação: " + imported + " importados · " + ignored + " já existentes preservados.", true);
+            }
+        }
+
         private void CreateBackup_Click(object sender, RoutedEventArgs e)
         {
             try { string backup = backupService.CreateBackup(); ShowTransferFeedback(backup == null ? "O JSON ainda não foi criado." : "Backup criado: " + backup, true); }
@@ -308,6 +334,7 @@ namespace MacroDoButler
             IList<string> knownGames=presetService.LoadGames();
             string game = selected == null ? selectedGame : selected.GameName;
             GameSelector.ItemsSource = knownGames;
+            RefreshGameBrowser(knownGames);
             GameSelector.ToolTip = GameSelector.Items.Count == 0 ? selectorEmptyText[0] : "Jogo ativo";
             GameEmptyText.Visibility = GameSelector.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             GameSelector.SelectedItem = game;
@@ -328,6 +355,7 @@ namespace MacroDoButler
             if(selectedName==null&&presets.Count>0)PresetSelector.SelectedIndex=0;
             if(PresetSelector.SelectedItem!=null){Preset p=presets.FirstOrDefault(x=>x.Name.Equals(PresetSelector.SelectedItem.ToString(),StringComparison.OrdinalIgnoreCase));if(p!=null)selectedPreset=p;}
             else selectedPreset=null;
+            SyncPresetBrowser(presets, game);
         }
         private void LoadPreset(Preset preset)
         {
@@ -338,6 +366,8 @@ namespace MacroDoButler
             updatingSelectors = false;
             PrimaryVerticalSlider.Value = Clamp(preset.PrimaryVertical, 0, 10000); PrimaryHorizontalSlider.Value = Clamp(preset.PrimaryHorizontal, -5000, 5000);
             SecondaryVerticalSlider.Value = Clamp(preset.SecondaryVertical, 0, 10000); SecondaryHorizontalSlider.Value = Clamp(preset.SecondaryHorizontal, -5000, 5000);
+            IntervalSlider.Value = preset.IntervalMilliseconds >= 2 ? Clamp(preset.IntervalMilliseconds, 2, 50) : 7;
+            SecondaryIntervalSlider.Value = Clamp(preset.SecondaryIntervalMilliseconds ?? (int)IntervalSlider.Value, 2, 50);
             RequireRight.IsChecked = preset.RequireRightButton;
             PresetName.Text = preset.Name; secondaryActive = preset.WeaponSlot == WeaponSlot.Secondary; UpdateWeaponStatus(); ShowFeedback("Preset carregado no macro.", true);
         }
@@ -399,7 +429,7 @@ namespace MacroDoButler
             ScrollViewer pane=sender as ScrollViewer;
             if(pane!=null){pane.ScrollToVerticalOffset(pane.VerticalOffset-e.Delta);e.Handled=true;}
         }
-        private static Preset ClonePreset(Preset p){return new Preset{GameName=p.GameName,CharacterName=p.CharacterName,WeaponName=p.WeaponName,WeaponSlot=p.WeaponSlot,Name=p.Name,PrimaryVertical=p.PrimaryVertical,PrimaryHorizontal=p.PrimaryHorizontal,SecondaryVertical=p.SecondaryVertical,SecondaryHorizontal=p.SecondaryHorizontal,IntervalMilliseconds=p.IntervalMilliseconds,RequireRightButton=p.RequireRightButton,CreatedAt=p.CreatedAt,UpdatedAt=p.UpdatedAt};}
+        private static Preset ClonePreset(Preset p){return new Preset{GameName=p.GameName,CharacterName=p.CharacterName,WeaponName=p.WeaponName,WeaponSlot=p.WeaponSlot,Name=p.Name,PrimaryVertical=p.PrimaryVertical,PrimaryHorizontal=p.PrimaryHorizontal,SecondaryVertical=p.SecondaryVertical,SecondaryHorizontal=p.SecondaryHorizontal,IntervalMilliseconds=p.IntervalMilliseconds,SecondaryIntervalMilliseconds=p.SecondaryIntervalMilliseconds,RequireRightButton=p.RequireRightButton,CreatedAt=p.CreatedAt,UpdatedAt=p.UpdatedAt};}
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -413,23 +443,10 @@ namespace MacroDoButler
                 case "SecondaryVertical": target = SecondaryVerticalText; break;
                 case "SecondaryHorizontal": target = SecondaryHorizontalText; break;
                 case "Interval": target = IntervalText; break;
+                case "SecondaryInterval": target = SecondaryIntervalText; break;
             }
             if (target != null) target.Text = ((int)slider.Value).ToString();
-            if (slider.Tag as string == "Interval" && !loadingMacroSettings && macroSettingsStorage != null) SaveMacroSettings();
-        }
 
-        private void SaveMacroSettings()
-        {
-            try
-            {
-                macroSettingsStorage.SaveInterval((int)IntervalSlider.Value);
-                MacroSettingsStatus.Text=string.Empty;
-            }
-            catch(Exception exception)
-            {
-                MacroSettingsStatus.Text="Não foi possível salvar o intervalo geral: "+exception.Message;
-                MacroSettingsStatus.Foreground=Brushes.Orange;
-            }
         }
 
         private void NumericText_LostFocus(object sender, RoutedEventArgs e)
@@ -442,6 +459,7 @@ namespace MacroDoButler
             else if (textBox == SecondaryVerticalText) SecondaryVerticalSlider.Value = Clamp(value, 0, 10000);
             else if (textBox == SecondaryHorizontalText) SecondaryHorizontalSlider.Value = Clamp(value, -5000, 5000);
             else if (textBox == IntervalText) IntervalSlider.Value = Clamp(value, 2, 50);
+            else if (textBox == SecondaryIntervalText) SecondaryIntervalSlider.Value = Clamp(value, 2, 50);
             SyncAllText();
         }
 
@@ -456,6 +474,7 @@ namespace MacroDoButler
             else if (textBox == SecondaryVerticalText) SecondaryVerticalSlider.Value = Clamp(value, 0, 10000);
             else if (textBox == SecondaryHorizontalText) SecondaryHorizontalSlider.Value = Clamp(value, -5000, 5000);
             else if (textBox == IntervalText) IntervalSlider.Value = Clamp(value, 2, 50);
+            else if (textBox == SecondaryIntervalText) SecondaryIntervalSlider.Value = Clamp(value, 2, 50);
         }
 
         private void SyncAllText()
@@ -465,29 +484,35 @@ namespace MacroDoButler
             SecondaryVerticalText.Text = ((int)SecondaryVerticalSlider.Value).ToString();
             SecondaryHorizontalText.Text = ((int)SecondaryHorizontalSlider.Value).ToString();
             IntervalText.Text = ((int)IntervalSlider.Value).ToString();
+            SecondaryIntervalText.Text = ((int)SecondaryIntervalSlider.Value).ToString();
         }
 
-        private void Toggle_Click(object sender, RoutedEventArgs e) { Toggle(); }
-        private void ToggleWeapon_Click(object sender, RoutedEventArgs e) { ToggleWeapon(); }
-        private void Toggle() { enabled = !enabled; UpdateStatus(); }
-        private void ToggleWeapon() { secondaryActive = !secondaryActive; UpdateWeaponStatus(); }
+        private void Toggle() { enabled = !enabled; UpdateStatus(); AudioCueService.PlayMacroToggle(); }
+        private void ToggleWeapon() { secondaryActive = !secondaryActive; UpdateWeaponStatus(); AudioCueService.PlayWeaponSwitch(); }
 
         private void UpdateStatus()
         {
-            StatusText.Text = enabled ? "LIGADO" : "DESLIGADO";
-            StatusText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(enabled ? "#7EE2A8" : "#9199A6"));
-            StatusPill.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(enabled ? "#263C302F" : "#342029"));
-            ToggleButton.Content = enabled ? "DESLIGAR · F1" : "LIGAR · F1";
+            UpdateMacroSummary();
+        }
+
+        private void UpdateMacroSummary()
+        {
+            bool primaryEnabled = enabled && !secondaryActive;
+            bool secondaryEnabled = enabled && secondaryActive;
+            SummaryPrimaryState.Text = primaryEnabled ? "Ativada" : "Desativada";
+            SummarySecondaryState.Text = secondaryEnabled ? "Ativada" : "Desativada";
+            SummaryPrimaryState.Foreground = primaryEnabled ? BrushOf("#7EE2A8") : (Brush)FindResource("MutedBrush");
+            SummarySecondaryState.Foreground = secondaryEnabled ? BrushOf("#7EE2A8") : (Brush)FindResource("MutedBrush");
         }
 
         private void UpdateWeaponStatus()
         {
+            UpdateMacroSummary();
             WeaponStatusText.Text = secondaryActive ? "Arma ativa: Secundária" : "Arma ativa: Primária";
-            WeaponButton.Content = secondaryActive ? "USAR PRIMÁRIA · F2" : "USAR SECUNDÁRIA · F2";
             PrimaryCard.Opacity = secondaryActive ? 0.70 : 1;
             SecondaryCard.Opacity = secondaryActive ? 1 : 0.70;
-            PrimaryActiveBadge.Background = BrushOf(secondaryActive ? "#252B34" : "#5AE52B3D");
-            SecondaryActiveBadge.Background = BrushOf(secondaryActive ? "#5AE52B3D" : "#252B34");
+            PrimaryActiveBadge.Background = BrushOf(secondaryActive ? "#272624" : "#453E3220");
+            SecondaryActiveBadge.Background = BrushOf(secondaryActive ? "#453E3220" : "#272624");
             ((TextBlock)PrimaryActiveBadge.Child).Text = secondaryActive ? "INATIVA" : "ATIVA";
             ((TextBlock)SecondaryActiveBadge.Child).Text = secondaryActive ? "ATIVA" : "INATIVA";
         }
@@ -511,11 +536,19 @@ namespace MacroDoButler
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); }
         private void Minimize_Click(object sender, RoutedEventArgs e) { WindowState = WindowState.Minimized; }
         private void Close_Click(object sender, RoutedEventArgs e) { Close(); }
+        private void PresetsNavigation_Click(object sender, RoutedEventArgs e) { SetSettingsPage(false); }
+        private void SettingsNavigation_Click(object sender, RoutedEventArgs e) { SetSettingsPage(true); }
         private void Settings_Click(object sender, RoutedEventArgs e)
         {
-            bool showSettings=SettingsPage.Visibility!=Visibility.Visible;
+            SetSettingsPage(SettingsPage.Visibility!=Visibility.Visible);
+        }
+        private void SetSettingsPage(bool showSettings)
+        {
+            EditorPage.Visibility=Visibility.Collapsed;
             MainPage.Visibility=showSettings?Visibility.Collapsed:Visibility.Visible;
             SettingsPage.Visibility=showSettings?Visibility.Visible:Visibility.Collapsed;
+            PresetsNavigationButton.IsChecked=!showSettings;
+            SettingsNavigationButton.IsChecked=showSettings;
             if(!showSettings&&capturingAction!=null)CancelCapture();
             if(showSettings)HotkeyItems.Focus();
         }
@@ -546,7 +579,7 @@ namespace MacroDoButler
             {
                 updatePreferences.NextUpdateCheckUtc=ex.RetryAfterUtc;SaveUpdatePreferences();
                 StartUpdateCooldown(ex.RetryAfterUtc,true);
-                LastUpdateCheckText.Text="Última tentativa: "+DateTime.Now.ToString("dd/MM/yyyy HH:mm");UpdateService.Log("GitHub rate limit; retry after "+ex.RetryAfterUtc.ToString("o"));
+                LastUpdateCheckText.Text="Última tentativa: "+DateTime.Now.ToString("dd/MM/yyyy HH:mm");UpdateService.Log("Update rate limit; retry after "+ex.RetryAfterUtc.ToString("o"));
             }
             catch(OperationCanceledException){UpdateStatusText.Text="Atualização cancelada.";}
             catch(Exception ex)
@@ -570,11 +603,11 @@ namespace MacroDoButler
             if(remaining<=TimeSpan.Zero)
             {
                 StopUpdateCooldown();updatePreferences.NextUpdateCheckUtc=null;SaveUpdatePreferences();
-                UpdateStatusText.Text=updateCooldownFromRateLimit?"O limite do GitHub foi liberado. Você já pode verificar novamente.":"Você já pode verificar atualizações novamente.";updateCooldownFromRateLimit=false;return;
+                UpdateStatusText.Text=updateCooldownFromRateLimit?"A verificação de atualizações está disponível novamente.":"Você já pode verificar atualizações novamente.";updateCooldownFromRateLimit=false;return;
             }
             string wait=FormatWait(remaining);
             UpdateStatusText.Text=updateCooldownFromRateLimit
-                ?"O GitHub limitou as verificações. Não clique várias vezes seguidas. Aguarde até "+updatePreferences.NextUpdateCheckUtc.Value.ToLocalTime().ToString("HH:mm")+" (aprox. "+wait+") para verificar novamente."
+                ?"O serviço de atualizações limitou as verificações. Aguarde até "+updatePreferences.NextUpdateCheckUtc.Value.ToLocalTime().ToString("HH:mm")+" (aprox. "+wait+") para verificar novamente."
                 :"Você já verificou há pouco. Não clique várias vezes seguidas. Aguarde "+wait+" para tentar de novo.";
         }
         private void StopUpdateCooldown(){if(updateCooldownTimer!=null)updateCooldownTimer.Stop();}
@@ -590,17 +623,11 @@ namespace MacroDoButler
         private void InstallUpdate_Click(object sender,RoutedEventArgs e)
         {
             if(string.IsNullOrEmpty(updateDownloadPath))return;if(AskBeforeInstallCheck.IsChecked==true&&MessageBox.Show(this,"Uma nova versão está disponível. Seus presets, atalhos e backups serão preservados durante a atualização. Criar backup e instalar agora?","Instalar atualização",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
-            try{UpdateStatusText.Text="Preparando backup e instalação...";updateService.Install(updatePreferences.ReopenAfterUpdate,Process.GetCurrentProcess().Id,updatePreferences.KeepPreviousVersion,updatePreferences.PreviousVersionsToKeep);UpdateStatusText.Text="Instalador iniciado. O aplicativo será fechado para concluir a atualização.";Close();}catch(Exception ex){UpdateStatusText.Text="Não foi possível instalar: "+ex.Message;UpdateService.Log("Install failed: "+ex.Message);MessageBox.Show(this,ex.Message,"Falha na atualização",MessageBoxButton.OK,MessageBoxImage.Error);}
+            try{UpdateStatusText.Text="Preparando backup e instalação...";updateService.Install(updatePreferences.ReopenAfterUpdate,Process.GetCurrentProcess().Id,updatePreferences.KeepPreviousVersion,updatePreferences.PreviousVersionsToKeep);UpdateStatusText.Text="O aplicativo será fechado e o instalador será aberto para concluir a atualização.";Close();}catch(Exception ex){UpdateStatusText.Text="Não foi possível instalar: "+ex.Message;UpdateService.Log("Install failed: "+ex.Message);MessageBox.Show(this,ex.Message,"Falha na atualização",MessageBoxButton.OK,MessageBoxImage.Error);}
         }
         private void CancelUpdate_Click(object sender,RoutedEventArgs e){if(updateCancellation!=null)updateCancellation.Cancel();}
         private void CheckUpdateButtons(bool enabled){if(enabled)DownloadUpdateButton.IsEnabled=updateService.Available!=null&&string.IsNullOrEmpty(updateDownloadPath);else DownloadUpdateButton.IsEnabled=false;}
         private static string FormatBytes(long n){return n<1024*1024?(n/1024.0).ToString("0")+" KB":(n/(1024.0*1024)).ToString("0.0")+" MB";}
-        private void Window_StateChanged(object sender, EventArgs e)
-        {
-            if (backgroundAnimation == null) return;
-            if (WindowState == WindowState.Minimized) backgroundAnimation.Pause(this);
-            else backgroundAnimation.Resume(this);
-        }
         private void Window_Closed(object sender, EventArgs e) { capturingAction=null; if(hotkeyMessageTimer!=null)hotkeyMessageTimer.Stop(); if(hotkeyService!=null)hotkeyService.Dispose(); inputService.Dispose(); }
 
         private static int Clamp(int value, int minimum, int maximum) { return Math.Max(minimum, Math.Min(maximum, value)); }
