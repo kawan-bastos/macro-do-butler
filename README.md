@@ -99,7 +99,7 @@ Requisitos de execução: Windows 10/11 e .NET Framework 4.8 ou superior. O Setu
 
 Para remover o aplicativo, use **Configurações do Windows → Aplicativos → Velqora → Desinstalar**. Os dados pessoais são mantidos. Uma caixa **desmarcada por padrão** permite solicitar sua remoção; uma segunda confirmação mostra `%LOCALAPPDATA%\Velqora`. Cancelar essa confirmação mantém os dados. Desinstalação silenciosa sempre preserva os dados. Links/junções nesse diretório impedem a exclusão automática. Nenhuma cópia na pasta antiga é apagada.
 
-O aplicativo usa manifesto `asInvoker`. A leitura de teclas e os atalhos globais não exigem elevação universal. Para controlar um aplicativo elevado, pode ser necessário fechar o Velqora e usar **Executar como administrador** sob a mesma conta. O Windows faz a solicitação; cancelar não provoca relançamento ou loop. Usar credenciais de outra conta também muda a pasta de dados. O instalador não altera UAC, Defender, SmartScreen ou políticas.
+O executável principal usa manifesto `requireAdministrator`: ao abrir o Velqora pelo instalador, Menu Iniciar, Área de Trabalho ou diretamente, o Windows solicita elevação pelo UAC. É necessário confirmar a solicitação para continuar; cancelá-la encerra a abertura. Isso evita exigir que a pessoa escolha manualmente **Executar como administrador** no menu de contexto. O aplicativo não tenta contornar o UAC nem relança em loop. Usar credenciais de outra conta também muda a pasta de dados. O instalador continua sendo instalado no escopo do usuário e não altera UAC, Defender, SmartScreen ou políticas.
 
 ## Dados e transição do nome antigo
 
