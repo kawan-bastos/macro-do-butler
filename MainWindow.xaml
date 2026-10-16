@@ -4,7 +4,7 @@
         Icon="assets/Velqora.png" Title="Velqora" Width="1360" Height="860" MinWidth="1120" MinHeight="700"
         FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
-        Closing="Window_Closing" Closed="Window_Closed" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown">
+        Closing="Window_Closing" Closed="Window_Closed" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown" PreviewMouseDown="Window_PreviewMouseDown">
     <Window.Resources>
         <Style x:Key="SidebarNavigationButtonStyle" TargetType="ToggleButton">
             <Setter Property="Height" Value="50" />

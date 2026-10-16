@@ -135,17 +135,26 @@ namespace MacroDoButler
         private void ChangeHotkey_Click(object sender,RoutedEventArgs e)
         {
             var button=sender as Button; var row=button==null?null:button.DataContext as HotkeyRow; if(row==null)return;
-            capturingAction=row.Action; capturedHotkey=null; HotkeyCaptureStatus.Text="Pressione a combinação desejada para "+row.Label+". ENTER confirma, ESC cancela."; Focus(); Keyboard.Focus(this);
+            capturingAction=row.Action; capturedHotkey=null; HotkeyCaptureStatus.Text="Pressione uma tecla ou botão do mouse para "+row.Label+". ENTER confirma, ESC cancela."; Focus(); Keyboard.Focus(this);
         }
         private void Window_PreviewKeyDown(object sender,KeyEventArgs e)
         {
             if(capturingAction==null)return; e.Handled=true; Key key;
             if(!HotkeyParser.TryKeyFromEvent(e,out key))return;
             if(key==Key.Escape){CancelCapture();return;}
-            if(key==Key.Enter){if(!string.IsNullOrEmpty(capturedHotkey))ApplyCapturedHotkey();else HotkeyCaptureStatus.Text="Pressione uma tecla principal junto dos modificadores.";return;}
+            if(key==Key.Enter){if(!string.IsNullOrEmpty(capturedHotkey))ApplyCapturedHotkey();else HotkeyCaptureStatus.Text="Pressione uma tecla ou botão do mouse.";return;}
             if(key==Key.Back||key==Key.Delete){capturedHotkey=null;HotkeyCaptureStatus.Text="Atalho desativado; ENTER confirma.";return;}
             if(!HotkeyValidator.IsAllowed(key)){HotkeyCaptureStatus.Text="Essa tecla não pode ser usada como atalho.";return;}
             capturedHotkey=HotkeyParser.Format(HotkeyParser.CurrentModifiers(),key); HotkeyCaptureStatus.Text=capturedHotkey+" — pressione ENTER para confirmar ou continue capturando.";
+        }
+        private void Window_PreviewMouseDown(object sender,MouseButtonEventArgs e)
+        {
+            if(capturingAction==null)return;
+            string mouseButton;
+            if(!HotkeyParser.TryMouseButtonFromEvent(e,out mouseButton))return;
+            e.Handled=true;
+            capturedHotkey=HotkeyParser.Format(HotkeyParser.CurrentModifiers(),mouseButton);
+            HotkeyCaptureStatus.Text=capturedHotkey+" — pressione ENTER para confirmar ou continue capturando.";
         }
         private void CancelCapture(){capturingAction=null;capturedHotkey=null;HotkeyCaptureStatus.Text="Captura cancelada.";Keyboard.ClearFocus();}
         private void ApplyCapturedHotkey()
