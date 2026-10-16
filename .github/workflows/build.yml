@@ -23,6 +23,16 @@ jobs:
         run: |
           dotnet run --project tests/MigrationTests.csproj -c Release
           if ($LASTEXITCODE -ne 0) { throw 'Testes de migração falharam.' }
+      - name: Testar atalhos globais por polling
+        shell: pwsh
+        run: |
+          dotnet run --project tests/HotkeyRegistrationTests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { throw 'Testes de atalhos globais falharam.' }
+      - name: Testar edição temporária de presets
+        shell: pwsh
+        run: |
+          dotnet run --project tests/PresetEditingTests.csproj -c Release -- $env:RUNNER_TEMP
+          if ($LASTEXITCODE -ne 0) { throw 'Testes de edição de presets falharam.' }
       - name: Importar certificado legítimo (somente tags)
         if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh

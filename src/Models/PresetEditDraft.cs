@@ -27,6 +27,17 @@ internal sealed class PresetEditDraft : INotifyPropertyChanged
     public bool RequireRight { get { return value.RequireRightButton; } set { this.value.RequireRightButton = value; Changed("RequireRight"); } }
     internal bool IsDirty { get { return !PresetEditingService.SameContent(value, baseline); } }
     internal Preset ToPreset() { var result = PresetEditingService.Copy(value); result.Name = (result.Name ?? string.Empty).Trim(); return result; }
+    internal MovementSettings ToMovementSettings(bool enabled, bool secondaryActive)
+    {
+        return new MovementSettings
+        {
+            Enabled = enabled,
+            RequireRightButton = value.RequireRightButton,
+            HorizontalPixelsPerSecond = secondaryActive ? value.SecondaryHorizontal : value.PrimaryHorizontal,
+            VerticalPixelsPerSecond = secondaryActive ? value.SecondaryVertical : value.PrimaryVertical,
+            IntervalMilliseconds = Math.Max(2, secondaryActive ? value.SecondaryIntervalMilliseconds.Value : value.IntervalMilliseconds)
+        };
+    }
     private static void Check(int number, int min, int max) { if (number < min || number > max) throw new ArgumentOutOfRangeException("value", "Use um valor entre " + min + " e " + max + "."); }
     private void Changed(string name) { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name)); }
 }

@@ -32,7 +32,7 @@ PrivilegesRequired=lowest
 SetupIconFile=..\assets\Velqora.ico
 UninstallDisplayIcon={app}\Velqora.exe
 OutputDir={#Output}
-OutputBaseFilename=Velqora-Setup-v{#AppVersion}
+OutputBaseFilename=Velqora-Setup-Windows-v{#AppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern dark includetitlebar
@@ -64,7 +64,7 @@ Name: "{userprograms}\{#ProductName}"; Filename: "{app}\Velqora.exe"; WorkingDir
 Name: "{userdesktop}\{#ProductName}"; Filename: "{app}\Velqora.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\Velqora.exe"; Description: "Abrir o Velqora (macro inicialmente desligado)"; Flags: nowait postinstall skipifsilent unchecked
+Filename: "{app}\Velqora.exe"; Description: "Abrir o Velqora (macro inicialmente desligado)"; Flags: nowait postinstall skipifsilent unchecked shellexec
 
 [Code]
 function GetFileAttributes(Path: String): LongWord;

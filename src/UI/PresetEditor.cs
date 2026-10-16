@@ -19,6 +19,7 @@ namespace MacroDoButler
             if (!sameDraft)
             {
                 if (!ConfirmDiscardDraft()) return;
+                ClearPresetDraft();
                 editOriginal = preset == null ? null : PresetEditingService.Copy(preset);
                 var initial = preset ?? new Preset
                 {
@@ -29,11 +30,13 @@ namespace MacroDoButler
                     RequireRightButton = true
                 };
                 editDraft = new PresetEditDraft(initial, preset == null);
+                editDraft.PropertyChanged += EditDraft_PropertyChanged;
                 EditorPage.DataContext = editDraft;
                 EditorFeedback.Text = string.Empty;
+                RefreshLiveEditMovementSettings();
             }
             EditorPageTitle.Text = editOriginal == null ? "Novo Preset" : "Editar preset";
-            EditorPageSubtitle.Text = editOriginal == null ? "Defina os valores do novo perfil" : "Ajuste os valores do perfil selecionado";
+            EditorPageSubtitle.Text = editOriginal == null ? "Prévia ao vivo: alterações afetam o macro temporariamente até salvar ou descartar" : "Prévia ao vivo: alterações afetam o macro temporariamente até salvar ou descartar";
             MainPage.Visibility = Visibility.Collapsed;
             SettingsPage.Visibility = Visibility.Collapsed;
             EditorPage.Visibility = Visibility.Visible;
@@ -49,6 +52,12 @@ namespace MacroDoButler
             return MessageBox.Show(this, "Descartar as alterações não salvas deste preset?", "Descartar edição",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
+        private void EditDraft_PropertyChanged(object sender, PropertyChangedEventArgs e) { RefreshLiveEditMovementSettings(); }
+        private void RefreshLiveEditMovementSettings()
+        {
+            MovementSettings settings = editDraft == null ? null : editDraft.ToMovementSettings(enabled, secondaryActive);
+            System.Threading.Volatile.Write(ref liveEditMovementSettings, settings);
+        }
         private void EditorBack_Click(object sender, RoutedEventArgs e) { SetSettingsPage(false); }
         private void EditorCancel_Click(object sender, RoutedEventArgs e)
         {
@@ -58,8 +67,10 @@ namespace MacroDoButler
         }
         private void ClearPresetDraft()
         {
+            if (editDraft != null) editDraft.PropertyChanged -= EditDraft_PropertyChanged;
             editDraft = null;
             editOriginal = null;
+            System.Threading.Volatile.Write(ref liveEditMovementSettings, null);
             EditorPage.DataContext = null;
             EditorFeedback.Text = string.Empty;
         }

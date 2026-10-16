@@ -30,10 +30,12 @@ namespace MacroDoButler
         private HotkeySettings hotkeySettings;
         private string capturingAction;
         private string capturedHotkey;
+        private string hotkeyRegistrationWarning;
         private DispatcherTimer hotkeyMessageTimer;
         private TextBlock hotkeyMessageTarget;
         private string hotkeyMessageText;
         private Preset selectedPreset;
+        private MovementSettings liveEditMovementSettings;
         private bool updatingSelectors;
         private readonly string[] selectorEmptyText = { "Nenhum jogo cadastrado", "Nenhum preset neste jogo" };
         private volatile bool enabled;
@@ -66,10 +68,7 @@ namespace MacroDoButler
             backupService = new PresetBackupService(presetService.FilePath);
             transferService = new PresetTransferService(backupService);
             inputService = new InputService(GetMovementSettings);
-            inputService.ToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(Toggle)); };
-            inputService.WeaponToggleRequested += delegate { Dispatcher.BeginInvoke(new Action(ToggleWeapon)); };
-            inputService.ExitRequested += delegate { Dispatcher.BeginInvoke(new Action(Close)); };
-            Loaded += delegate { RefreshHotkeyUi(); if(!string.IsNullOrEmpty(hotkeyWarning)) { HotkeyStatus.Text=hotkeyWarning; HotkeyStatus.Foreground=Brushes.Orange; } InitializeUpdateUi(); ImportPendingPresets(dataDirectory); };
+            Loaded += delegate { RefreshHotkeyUi(); ShowHotkeyWarnings(hotkeyWarning); InitializeUpdateUi(); ImportPendingPresets(dataDirectory); };
 
             IList<Preset> initialPresets = presetService.LoadAll();
             RefreshOrganization(initialPresets.FirstOrDefault());
@@ -85,14 +84,13 @@ namespace MacroDoButler
             hotkeyService=new HotkeyService(new WindowInteropHelper(this).Handle);
             hotkeyService.ActionRequested+=HotkeyService_ActionRequested;
             string error=hotkeyService.Register(hotkeySettings);
-            bool usingF12Fallback=string.Equals(hotkeySettings.ExitApplication,"F12",StringComparison.OrdinalIgnoreCase);
-            inputService.EnableFallbackF12(usingF12Fallback);
-            if(usingF12Fallback&&error!=null&&error.StartsWith("Fechar aplicativo:",StringComparison.Ordinal)) error=null;
-            if(error!=null) Dispatcher.BeginInvoke(new Action(delegate { HotkeyStatus.Text=error; HotkeyStatus.Foreground=Brushes.Orange; }));
+            hotkeyRegistrationWarning=error;
+            if(error!=null) Dispatcher.BeginInvoke(new Action(delegate { ShowHotkeyWarnings(null); }));
         }
 
         private void HotkeyService_ActionRequested(string action)
         {
+            if(!Dispatcher.CheckAccess()){if(!Dispatcher.HasShutdownStarted)Dispatcher.BeginInvoke(new Action<string>(HotkeyService_ActionRequested),action);return;}
             if(action=="ToggleMacro") Toggle(); else if(action=="SwitchWeapon") ToggleWeapon(); else if(action=="ExitApplication") Close(); else if(action=="ShowWindow") ToggleWindowVisibility();
         }
 
@@ -163,12 +161,11 @@ namespace MacroDoButler
             string validation=HotkeyValidator.Validate(candidate); if(validation!=null){HotkeyCaptureStatus.Text=validation;return;}
             string conflict=FindHotkeyConflict(candidate,capturingAction); if(conflict!=null){if(MessageBox.Show(this,"Esse atalho já é usado por “"+conflict+"”. Deseja substituir o atalho anterior?","Conflito de atalhos",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return; SetHotkeyValue(candidate,conflict,null);}
             string error=hotkeyService==null?"A janela ainda não está pronta.":hotkeyService.TryReplace(hotkeySettings,candidate);
-            if(error!=null){HotkeyCaptureStatus.Text=error;return;}
+            if(error!=null){hotkeyRegistrationWarning=error;ShowHotkeyWarnings(null);HotkeyCaptureStatus.Text=error;return;}
             try{hotkeyStorage.Save(candidate);}catch(Exception ex){string rollback=hotkeyService.TryReplace(candidate,hotkeySettings);HotkeyCaptureStatus.Text="Não foi possível salvar hotkeys.json: "+ex.Message+(rollback==null?"":" "+rollback);return;}
             hotkeySettings=candidate; capturingAction=null; capturedHotkey=null; RefreshHotkeyUi(); HotkeyCaptureStatus.Text="Atalho atualizado com sucesso.";
-            if(!string.IsNullOrEmpty(hotkeyService.LastRegistrationWarning)){HotkeyStatus.Text=hotkeyService.LastRegistrationWarning;HotkeyStatus.Foreground=Brushes.Orange;}
-            else {HotkeyStatus.Text=string.Empty;}
-            inputService.EnableFallbackF12(string.Equals(hotkeySettings.ExitApplication,"F12",StringComparison.OrdinalIgnoreCase));
+            hotkeyRegistrationWarning=hotkeyService.LastRegistrationWarning;
+            ShowHotkeyWarnings(null);
             if(string.IsNullOrEmpty(hotkeyService.LastRegistrationWarning))ShowTransientHotkeyMessage(HotkeyCaptureStatus,"Atalho atualizado com sucesso.",Brushes.LightGreen);
         }
         private static string FindHotkeyConflict(HotkeySettings s,string action)
@@ -182,8 +179,16 @@ namespace MacroDoButler
         private void RestoreHotkeys_Click(object sender,RoutedEventArgs e)
         {
             if(MessageBox.Show(this,"Restaurar F1, F2 e F12 e remover os atalhos opcionais?","Restaurar padrões",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
-            HotkeySettings defaults=HotkeySettings.Defaults(); string error=hotkeyService.TryReplace(hotkeySettings,defaults); if(error!=null){HotkeyStatus.Text=error;HotkeyStatus.Foreground=Brushes.Orange;return;}
-            try{hotkeyStorage.Save(defaults);}catch(Exception ex){string rollback=hotkeyService.TryReplace(defaults,hotkeySettings);HotkeyStatus.Text="Não foi possível salvar: "+ex.Message+(rollback==null?"":" "+rollback);return;} hotkeySettings=defaults; RefreshHotkeyUi(); inputService.EnableFallbackF12(true); HotkeyStatus.Text=string.Empty; ShowTransientHotkeyMessage(HotkeyCaptureStatus,"Padrões restaurados.",Brushes.LightGreen);
+            HotkeySettings defaults=HotkeySettings.Defaults(); string error=hotkeyService.TryReplace(hotkeySettings,defaults); if(error!=null){hotkeyRegistrationWarning=error;ShowHotkeyWarnings(null);return;}
+            try{hotkeyStorage.Save(defaults);}catch(Exception ex){string rollback=hotkeyService.TryReplace(defaults,hotkeySettings);HotkeyStatus.Text="Não foi possível salvar: "+ex.Message+(rollback==null?"":" "+rollback);return;} hotkeySettings=defaults; RefreshHotkeyUi(); hotkeyRegistrationWarning=hotkeyService.LastRegistrationWarning; ShowHotkeyWarnings(null); ShowTransientHotkeyMessage(HotkeyCaptureStatus,"Padrões restaurados.",Brushes.LightGreen);
+        }
+
+        private void ShowHotkeyWarnings(string storageWarning)
+        {
+            string[] warnings={storageWarning,hotkeyRegistrationWarning};
+            string message=string.Join(" ",warnings.Where(value=>!string.IsNullOrWhiteSpace(value)));
+            HotkeyStatus.Text=message;
+            HotkeyStatus.Foreground=string.IsNullOrEmpty(message)?(Brush)FindResource("MutedBrush"):Brushes.Orange;
         }
 
         private void ShowTransientHotkeyMessage(TextBlock target,string message,Brush color)
@@ -203,6 +208,8 @@ namespace MacroDoButler
 
         private MovementSettings GetMovementSettings()
         {
+            MovementSettings preview = Volatile.Read(ref liveEditMovementSettings);
+            if (preview != null) return preview;
             if (!Dispatcher.CheckAccess()) return Dispatcher.Invoke(new Func<MovementSettings>(GetMovementSettings));
             return new MovementSettings
             {
@@ -496,8 +503,8 @@ namespace MacroDoButler
             SecondaryIntervalText.Text = ((int)SecondaryIntervalSlider.Value).ToString();
         }
 
-        private void Toggle() { enabled = !enabled; UpdateStatus(); AudioCueService.PlayMacroToggle(); }
-        private void ToggleWeapon() { secondaryActive = !secondaryActive; UpdateWeaponStatus(); AudioCueService.PlayWeaponSwitch(); }
+        private void Toggle() { enabled = !enabled; RefreshLiveEditMovementSettings(); UpdateStatus(); AudioCueService.PlayMacroToggle(); }
+        private void ToggleWeapon() { secondaryActive = !secondaryActive; RefreshLiveEditMovementSettings(); UpdateWeaponStatus(); AudioCueService.PlayWeaponSwitch(); }
 
         private void UpdateStatus()
         {
@@ -553,6 +560,11 @@ namespace MacroDoButler
         }
         private void SetSettingsPage(bool showSettings)
         {
+            if(EditorPage.Visibility==Visibility.Visible)
+            {
+                if(!ConfirmDiscardDraft()) return;
+                ClearPresetDraft();
+            }
             EditorPage.Visibility=Visibility.Collapsed;
             MainPage.Visibility=showSettings?Visibility.Collapsed:Visibility.Visible;
             SettingsPage.Visibility=showSettings?Visibility.Visible:Visibility.Collapsed;

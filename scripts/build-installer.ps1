@@ -25,7 +25,7 @@ $release = Join-Path $dist ('release-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $release | Out-Null
 & $Iscc "/DAppVersion=$version" "/DPayload=$payload" "/DOutput=$release" (Join-Path $root 'installer\Velqora.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o instalador.' }
-$installer = Join-Path $release "Velqora-Setup-v$version.exe"
+$installer = Join-Path $release "Velqora-Setup-Windows-v$version.exe"
 if (-not (Test-Path -LiteralPath $installer)) { throw 'O instalador não foi criado.' }
 if ($Sign) { & (Join-Path $PSScriptRoot 'Sign-Artifact.ps1') -Path $installer }
 try { Copy-Item -LiteralPath (Join-Path $payload 'Velqora.exe') -Destination (Join-Path $dist 'Velqora.exe') -Force }
@@ -43,7 +43,7 @@ $hashes | Set-Content -LiteralPath (Join-Path $release 'SHA256SUMS.txt') -Encodi
 (Get-FileHash -LiteralPath (Join-Path $release 'Velqora.exe')).Hash.ToLowerInvariant() | Set-Content -LiteralPath (Join-Path $release 'Velqora.sha256') -Encoding ascii
 $status = if ($Sign) { 'ASSINADO: executável e instalador verificados por SignTool /pa /all /tw e Authenticode.' } else { 'NÃO ASSINADO: nenhum certificado configurado. Não existe identidade de editor verificada.' }
 "Velqora $version`r`n$status" | Set-Content -LiteralPath (Join-Path $release 'SIGNING-STATUS.txt') -Encoding utf8
-"Velqora $version`r`n`r`n$status`r`n`r`nInstale usando Velqora-Setup-v$version.exe. Dados pessoais são preservados em %LOCALAPPDATA%\Velqora. Consulte README.md para migração e recuperação." | Set-Content -LiteralPath (Join-Path $release 'RELEASE-NOTES.md') -Encoding utf8
+"Velqora $version para Windows`r`n`r`n$status`r`n`r`nInstale usando Velqora-Setup-Windows-v$version.exe. Dados pessoais são preservados em %LOCALAPPDATA%\Velqora. Consulte README.md para migração e recuperação." | Set-Content -LiteralPath (Join-Path $release 'RELEASE-NOTES.md') -Encoding utf8
 if ($env:GITHUB_OUTPUT) { "release_dir=$release" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8 }
 Write-Host "Distribuição: $release"
 Write-Host $status

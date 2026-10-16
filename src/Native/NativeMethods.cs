@@ -7,7 +7,6 @@ internal static class NativeMethods
     internal const int RightMouseButton = 0x02;
     internal const int F1 = 0x70;
     internal const int F2 = 0x71;
-    internal const int F12 = 0x7B;
     private const uint MouseEventMove = 0x0001;
 
     internal static bool IsKeyDown(int virtualKey) { return (GetAsyncKeyState(virtualKey) & 0x8000) != 0; }

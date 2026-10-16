@@ -92,10 +92,10 @@ O instalador usa **Inno Setup 6.7.3**: permite distribuição Win32 tradicional,
 
 Requisitos de execução: Windows 10/11 e .NET Framework 4.8 ou superior. O Setup funciona offline; se o Framework faltar, mostra uma mensagem e encerra sem baixar ou executar dependências. Use o instalador offline oficial da Microsoft para preparar essas máquinas.
 
-1. Baixe `Velqora-Setup-vX.Y.Z.exe` nas releases oficiais e confira `SHA256SUMS.txt`.
+1. Baixe `Velqora-Setup-Windows-vX.Y.Z.exe` nas releases oficiais e confira `SHA256SUMS.txt`.
 2. Escolha o destino (padrão `%LOCALAPPDATA%\Programs\Velqora`) e, opcionalmente, o atalho na Área de Trabalho. O Menu Iniciar recebe um atalho.
 3. Responda se já utilizou o Velqora anteriormente. Se responder **Sim**, escolha se quer importar presets agora. Ao responder **Sim** novamente, clique em **Procurar**, selecione um arquivo `presets.json` ou `presets.cfg` e clique em **Abrir**. Qualquer resposta **Não** continua a instalação normalmente. Na primeira abertura, o aplicativo importa o arquivo escolhido, mantém presets de mesmo nome já existentes e preserva o arquivo original.
-4. Ao terminar, a opção **Abrir o Velqora** vem desmarcada. O macro inicia desligado; F1 ativa/desativa, F2 alterna a arma e F12 fecha. Logitech G HUB não é necessário.
+4. Ao terminar, a opção **Abrir o Velqora** vem desmarcada. Se marcá-la, o Setup abre o aplicativo pelo Shell do Windows para que o UAC possa solicitar a elevação necessária. O macro inicia desligado; F1 ativa/desativa, F2 alterna a arma e F12 fecha. Logitech G HUB não é necessário.
 
 Para remover o aplicativo, use **Configurações do Windows → Aplicativos → Velqora → Desinstalar**. Os dados pessoais são mantidos. Uma caixa **desmarcada por padrão** permite solicitar sua remoção; uma segunda confirmação mostra `%LOCALAPPDATA%\Velqora`. Cancelar essa confirmação mantém os dados. Desinstalação silenciosa sempre preserva os dados. Links/junções nesse diretório impedem a exclusão automática. Nenhuma cópia na pasta antiga é apagada.
 

@@ -30,6 +30,10 @@ internal static class PresetEditingTests
         draft.PrimaryVertical=620; draft.SecondaryVertical=120; draft.PrimaryHorizontal=-45; draft.SecondaryHorizontal=33;
         draft.PrimaryInterval=9; draft.SecondaryInterval=15; draft.RequireRight=false; draft.Name="Renamed";
         Assert(draft.IsDirty && notifications==8,"Draft synchronization notifications failed");
+        var livePrimary=draft.ToMovementSettings(true,false);
+        var liveSecondary=draft.ToMovementSettings(true,true);
+        Assert(livePrimary.Enabled&&livePrimary.VerticalPixelsPerSecond==620&&livePrimary.HorizontalPixelsPerSecond==-45&&livePrimary.IntervalMilliseconds==9&&!livePrimary.RequireRightButton,"Primary live preview values are incorrect");
+        Assert(liveSecondary.Enabled&&liveSecondary.VerticalPixelsPerSecond==120&&liveSecondary.HorizontalPixelsPerSecond==33&&liveSecondary.IntervalMilliseconds==15,"Secondary live preview values are incorrect");
         Assert(original.PrimaryVertical==350 && original.Name=="Original","Draft modified source");
         Assert(before==File.ReadAllText(repository.FilePath),"Editing wrote storage before Save");
         Reject(()=>draft.PrimaryInterval=1);
