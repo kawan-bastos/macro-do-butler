@@ -55,6 +55,7 @@ namespace MacroDoButler
                 PresetBrowserTitle.ToolTip = PresetBrowserTitle.Text;
                 var current = presets.FirstOrDefault(p => p.Name == (string)PresetSelector.SelectedItem);
                 SelectedPresetSummary.Visibility = current == null ? Visibility.Collapsed : Visibility.Visible;
+                if(current==null)MovementSummary.ShowSettings(null,secondaryActive,enabled,0,0);
                 DeleteSelectedPresetButton.IsEnabled = current != null;
                 SelectedPresetTitle.Text = current == null ? "Selecione ou crie um preset" : current.Name;
             }

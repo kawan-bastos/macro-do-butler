@@ -8,10 +8,11 @@ internal sealed class PresetEditDraft : INotifyPropertyChanged
     private readonly Preset baseline;
     internal PresetEditDraft(Preset preset, bool isNew = false)
     {
-        MinimumInterval = isNew ? 0 : 2;
+        MinimumInterval = 2;
         value = PresetEditingService.Copy(preset);
-        if (!isNew) value.IntervalMilliseconds = value.IntervalMilliseconds >= 2 && value.IntervalMilliseconds <= 50 ? value.IntervalMilliseconds : 7;
-        value.SecondaryIntervalMilliseconds = value.SecondaryIntervalMilliseconds ?? value.IntervalMilliseconds;
+        value.IntervalMilliseconds = value.IntervalMilliseconds >= 2 && value.IntervalMilliseconds <= 50 ? value.IntervalMilliseconds : (isNew ? 2 : 7);
+        value.SecondaryIntervalMilliseconds = value.SecondaryIntervalMilliseconds.HasValue && value.SecondaryIntervalMilliseconds.Value >= 2 && value.SecondaryIntervalMilliseconds.Value <= 50
+            ? value.SecondaryIntervalMilliseconds : value.IntervalMilliseconds;
         baseline = PresetEditingService.Copy(value);
     }
     public int MinimumInterval { get; private set; }
@@ -31,6 +32,7 @@ internal sealed class PresetEditDraft : INotifyPropertyChanged
     {
         return new MovementSettings
         {
+            Trajectory = secondaryActive ? value.SecondaryTrajectory : value.PrimaryTrajectory,
             Enabled = enabled,
             RequireRightButton = value.RequireRightButton,
             HorizontalPixelsPerSecond = secondaryActive ? value.SecondaryHorizontal : value.PrimaryHorizontal,

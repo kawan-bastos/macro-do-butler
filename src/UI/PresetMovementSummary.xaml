@@ -1,0 +1,18 @@
+<UserControl x:Class="MacroDoButler.PresetMovementSummary" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:MacroDoButler">
+ <StackPanel>
+  <WrapPanel Margin="0,0,0,14">
+   <Border x:Name="ModeBadge" Background="#302F2615" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="5" Padding="10,5" Margin="0,0,12,0"><TextBlock x:Name="ModeText" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource AccentBrightBrush}"/></Border>
+   <TextBlock x:Name="MacroState" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+  </WrapPanel>
+  <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+   <StackPanel Margin="0,0,16,0"><TextBlock x:Name="VerticalLabel" Foreground="{StaticResource MutedBrush}"/><TextBlock x:Name="VerticalValue" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+   <StackPanel Grid.Column="1"><TextBlock x:Name="HorizontalLabel" Foreground="{StaticResource MutedBrush}"/><TextBlock x:Name="HorizontalValue" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+  </Grid>
+  <StackPanel x:Name="AdvancedDetails" Visibility="Collapsed">
+   <TextBlock x:Name="TrajectoryInfo" Foreground="{StaticResource AccentBrightBrush}" TextWrapping="Wrap" Margin="0,0,0,7"/>
+   <TextBlock x:Name="TrajectoryEnding" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+   <local:TrajectoryPlot x:Name="MiniPlot" Height="160" IsHitTestVisible="False" Focusable="False" AutomationProperties.Name="Miniatura da trajetória avançada salva"/>
+   <TextBlock Text="Trajetória salva • mesma visualização da aba Avançada" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,7,0,14"/>
+  </StackPanel>
+ </StackPanel>
+</UserControl>

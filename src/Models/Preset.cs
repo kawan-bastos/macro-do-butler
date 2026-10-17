@@ -7,6 +7,8 @@ internal enum WeaponSlot { Primary, Secondary }
 [DataContract]
 internal sealed class Preset
 {
+    [DataMember(Name="primaryTrajectory", EmitDefaultValue=false)] public Trajectory PrimaryTrajectory { get; set; }
+    [DataMember(Name="secondaryTrajectory", EmitDefaultValue=false)] public Trajectory SecondaryTrajectory { get; set; }
     [DataMember(Name="gameName", EmitDefaultValue=false)]
     public string GameName { get; set; }
     [DataMember(Name="characterName", EmitDefaultValue=false)]

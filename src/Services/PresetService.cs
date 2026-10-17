@@ -217,6 +217,8 @@ internal sealed class PresetService
     internal static Preset Normalize(Preset p)
     {
         if (p == null) return null;
+        p.PrimaryTrajectory=Trajectory.Normalize(p.PrimaryTrajectory);
+        p.SecondaryTrajectory=Trajectory.Normalize(p.SecondaryTrajectory);
         if (string.IsNullOrWhiteSpace(p.GameName)) p.GameName = UncategorizedGameName;
         if (string.IsNullOrWhiteSpace(p.CharacterName)) p.CharacterName = "Preset";
         if (string.IsNullOrWhiteSpace(p.WeaponName)) p.WeaponName = "Arma não definida";

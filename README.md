@@ -168,3 +168,8 @@ Referências técnicas: [Inno Setup e distribuição oficial](https://jrsoftware
 ## Validação
 
 Consulte [docs/VALIDATION.md](docs/VALIDATION.md) para resultados executados e casos que precisam de validação interativa/VM.
+
+
+### Trajetórias avançadas
+
+A seção **Avançada** permite editar uma trajetória temporal por preset e por arma, com prévia animada interna, interpolação e fase final explícita. Os presets básicos continuam compatíveis. Consulte o [guia de configuração, arquitetura e testes](docs/advanced-trajectory.md).

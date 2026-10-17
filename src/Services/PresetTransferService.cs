@@ -85,7 +85,7 @@ internal sealed class PresetTransferService
             (!preset.SecondaryIntervalMilliseconds.HasValue || (preset.SecondaryIntervalMilliseconds.Value >= 2 && preset.SecondaryIntervalMilliseconds.Value <= 50));
     }
 
-    private static Preset Clone(Preset p) { return new Preset { GameName=p.GameName, CharacterName=p.CharacterName, WeaponName=p.WeaponName, WeaponSlot=p.WeaponSlot, Name = p.Name == null ? null : p.Name.Trim(), PrimaryVertical = p.PrimaryVertical, PrimaryHorizontal = p.PrimaryHorizontal, SecondaryVertical = p.SecondaryVertical, SecondaryHorizontal = p.SecondaryHorizontal, IntervalMilliseconds = p.IntervalMilliseconds, SecondaryIntervalMilliseconds = p.SecondaryIntervalMilliseconds, RequireRightButton = p.RequireRightButton, CreatedAt=p.CreatedAt, UpdatedAt=p.UpdatedAt }; }
+    private static Preset Clone(Preset p) { return new Preset { PrimaryTrajectory=Trajectory.Normalize(p.PrimaryTrajectory), SecondaryTrajectory=Trajectory.Normalize(p.SecondaryTrajectory), GameName=p.GameName, CharacterName=p.CharacterName, WeaponName=p.WeaponName, WeaponSlot=p.WeaponSlot, Name = p.Name == null ? null : p.Name.Trim(), PrimaryVertical = p.PrimaryVertical, PrimaryHorizontal = p.PrimaryHorizontal, SecondaryVertical = p.SecondaryVertical, SecondaryHorizontal = p.SecondaryHorizontal, IntervalMilliseconds = p.IntervalMilliseconds, SecondaryIntervalMilliseconds = p.SecondaryIntervalMilliseconds, RequireRightButton = p.RequireRightButton, CreatedAt=p.CreatedAt, UpdatedAt=p.UpdatedAt }; }
 }
 
 [DataContract]

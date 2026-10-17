@@ -13,6 +13,8 @@ namespace MacroDoButler
 
         private void OpenPresetEditor(Preset preset, string newGame = null)
         {
+            if(AdvancedPage.Visibility==Visibility.Visible && !AdvancedPage.ConfirmDiscard())return;
+            AdvancedPage.Visibility=Visibility.Collapsed; AdvancedNavigationButton.IsChecked=false;
             bool sameDraft = editDraft != null && (preset == null
                 ? editOriginal == null && string.Equals(editDraft.GameName, newGame, StringComparison.OrdinalIgnoreCase)
                 : editOriginal != null && PresetService.IdentityEquals(editOriginal, preset));
@@ -26,7 +28,7 @@ namespace MacroDoButler
                     GameName = newGame, Name = string.Empty, CharacterName = "Preset", WeaponName = "Arma não definida",
                     PrimaryVertical = 0, PrimaryHorizontal = 0,
                     SecondaryVertical = 0, SecondaryHorizontal = 0,
-                    IntervalMilliseconds = 0, SecondaryIntervalMilliseconds = 0,
+                    IntervalMilliseconds = 2, SecondaryIntervalMilliseconds = 2,
                     RequireRightButton = true
                 };
                 editDraft = new PresetEditDraft(initial, preset == null);
@@ -55,7 +57,9 @@ namespace MacroDoButler
         private void EditDraft_PropertyChanged(object sender, PropertyChangedEventArgs e) { RefreshLiveEditMovementSettings(); }
         private void RefreshLiveEditMovementSettings()
         {
+            movementRevision++;
             MovementSettings settings = editDraft == null ? null : editDraft.ToMovementSettings(enabled, secondaryActive);
+            if(settings!=null)settings.Revision=movementRevision;
             System.Threading.Volatile.Write(ref liveEditMovementSettings, settings);
         }
         private void EditorBack_Click(object sender, RoutedEventArgs e) { SetSettingsPage(false); }
@@ -68,6 +72,7 @@ namespace MacroDoButler
         private void ClearPresetDraft()
         {
             if (editDraft != null) editDraft.PropertyChanged -= EditDraft_PropertyChanged;
+            movementRevision++;
             editDraft = null;
             editOriginal = null;
             System.Threading.Volatile.Write(ref liveEditMovementSettings, null);
@@ -100,7 +105,7 @@ namespace MacroDoButler
         }
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            if (!ConfirmDiscardDraft()) e.Cancel = true;
+            if (!ConfirmDiscardDraft() || (AdvancedPage.Visibility==Visibility.Visible && !AdvancedPage.ConfirmDiscard())) e.Cancel = true;
         }
     }
 }

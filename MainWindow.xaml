@@ -1,6 +1,7 @@
 <Window x:Class="MacroDoButler.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MacroDoButler"
         Icon="assets/Velqora.png" Title="Velqora" Width="1360" Height="860" MinWidth="1120" MinHeight="700"
         FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
@@ -61,6 +62,9 @@
                             <ToggleButton x:Name="PresetsNavigationButton" Content="Presets" IsChecked="True" Style="{StaticResource SidebarNavigationButtonStyle}" Click="PresetsNavigation_Click" AutomationProperties.Name="Presets">
                                 <ToggleButton.ContentTemplate><DataTemplate><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Viewbox Width="19" Height="19"><Canvas Width="24" Height="24"><Path Data="M 4,6 L 20,6 L 20,18 L 4,18 Z M 7,9 L 17,9 M 7,12 L 14,12 M 7,15 L 12,15" Stroke="{StaticResource AccentBrightBrush}" StrokeThickness="1.5" Fill="Transparent" /></Canvas></Viewbox></StackPanel></DataTemplate></ToggleButton.ContentTemplate>
                             </ToggleButton>
+                            <ToggleButton x:Name="AdvancedNavigationButton" Content="Avançada" Style="{StaticResource SidebarNavigationButtonStyle}" Click="AdvancedNavigation_Click" AutomationProperties.Name="Avançada">
+                                <ToggleButton.ContentTemplate><DataTemplate><TextBlock Text="⌖" FontSize="22" Foreground="{StaticResource AccentBrightBrush}"/></DataTemplate></ToggleButton.ContentTemplate>
+                            </ToggleButton>
                             <ToggleButton x:Name="SettingsNavigationButton" Content="Configurações" Style="{StaticResource SidebarNavigationButtonStyle}" Click="SettingsNavigation_Click" AutomationProperties.Name="Configurações">
                                 <ToggleButton.ContentTemplate><DataTemplate><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Viewbox Width="19" Height="19"><Canvas Width="24" Height="24"><Path Data="M 22.340,10.177 L 22.340,13.823 L 19.727,14.071 L 18.928,16.000 L 20.601,18.023 L 18.023,20.601 L 16.000,18.928 L 14.071,19.727 L 13.823,22.340 L 10.177,22.340 L 9.929,19.727 L 8.000,18.928 L 5.977,20.601 L 3.399,18.023 L 5.072,16.000 L 4.273,14.071 L 1.660,13.823 L 1.660,10.177 L 4.273,9.929 L 5.072,8.000 L 3.399,5.977 L 5.977,3.399 L 8.000,5.072 L 9.929,4.273 L 10.177,1.660 L 13.823,1.660 L 14.071,4.273 L 16.000,5.072 L 18.023,3.399 L 20.601,5.977 L 18.928,8.000 L 19.727,9.929 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" StrokeThickness="1.6" StrokeLineJoin="Round" Fill="Transparent"/><Ellipse Canvas.Left="8.5" Canvas.Top="8.5" Width="7" Height="7" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" StrokeThickness="1.6"/></Canvas></Viewbox></StackPanel></DataTemplate></ToggleButton.ContentTemplate>
                             </ToggleButton>
@@ -86,6 +90,7 @@
                     </Grid>
                 </Border>
 
+                <local:TrajectoryEditor x:Name="AdvancedPage" Grid.Column="1" Grid.Row="1" Visibility="Collapsed"/>
                 <Grid x:Name="MainPage" Grid.Column="1" Grid.Row="1" Margin="28,8,24,20">
                     <Grid.Resources>
                         <Style x:Key="PresetOutlineButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
@@ -313,26 +318,10 @@
                                         </Button>
                                     </Grid>
                                     <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,10,0,12"/>
-                                    <Grid x:Name="SelectedPresetSummary" Margin="0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition/>
-                                            <ColumnDefinition/>
-                                            <ColumnDefinition/>
-                                            <ColumnDefinition/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="0,0,18,0">
-                                            <StackPanel>
-                                                <TextBlock Text="Força vertical" Foreground="{StaticResource MutedBrush}" FontSize="13"/>
-                                                <TextBlock Text="{Binding Text, ElementName=PrimaryVerticalText, StringFormat={}{0} px/s}" FontSize="27" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Grid.Column="1" BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="20,0,18,0">
-                                            <StackPanel>
-                                                <TextBlock Text="Correção lateral" Foreground="{StaticResource MutedBrush}" FontSize="13"/>
-                                                <TextBlock Text="{Binding Text, ElementName=PrimaryHorizontalText, StringFormat={}{0} px/s}" FontSize="27" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                                            </StackPanel>
-                                        </Border>
-                                        <Border Grid.Column="2" BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="20,0,12,0">
+                                    <StackPanel x:Name="SelectedPresetSummary">
+                                        <local:PresetMovementSummary x:Name="MovementSummary"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" BorderBrush="#303638" BorderThickness="0,0,1,0" Padding="0,0,12,0">
                                             <StackPanel>
                                                 <TextBlock Text="Arma primária" FontSize="13"/>
                                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
@@ -343,7 +332,7 @@
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
-                                        <Border Grid.Column="3" Padding="20,0,0,0">
+                                        <Border Grid.Column="1" Padding="20,0,0,0">
                                             <StackPanel>
                                                 <TextBlock Text="Arma secundária" FontSize="13"/>
                                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
@@ -354,7 +343,8 @@
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
-                                    </Grid>
+                                        </Grid>
+                                    </StackPanel>
                                     <TextBlock x:Name="FeedbackText" Foreground="#7EE2A8" TextWrapping="Wrap" Margin="0,8,0,0">
                                         <TextBlock.Style>
                                             <Style xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="TextBlock">

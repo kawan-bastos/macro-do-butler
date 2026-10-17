@@ -38,6 +38,7 @@ namespace MacroDoButler
         private MovementSettings liveEditMovementSettings;
         private bool updatingSelectors;
         private readonly string[] selectorEmptyText = { "Nenhum jogo cadastrado", "Nenhum preset neste jogo" };
+        private long movementRevision;
         private volatile bool enabled;
         private volatile bool secondaryActive;
         private UpdateService updateService;
@@ -54,6 +55,7 @@ namespace MacroDoButler
         {
             string dataDirectory = UserDataService.Initialize();
             InitializeComponent();
+            AdvancedPage.TestWeaponSelected=secondary=> { secondaryActive=secondary; movementRevision++; UpdateWeaponStatus(); };
             hotkeyStorage = new HotkeyStorageService(dataDirectory);
             string hotkeyWarning; hotkeySettings=hotkeyStorage.Load(out hotkeyWarning);
             macroSettingsStorage = new MacroSettingsStorageService(dataDirectory);
@@ -211,9 +213,16 @@ namespace MacroDoButler
             MovementSettings preview = Volatile.Read(ref liveEditMovementSettings);
             if (preview != null) return preview;
             if (!Dispatcher.CheckAccess()) return Dispatcher.Invoke(new Func<MovementSettings>(GetMovementSettings));
+            if(AdvancedPage.Visibility==Visibility.Visible)
+            {
+                MovementSettings advancedPreview=AdvancedPage.GetLiveSettings(enabled,secondaryActive);
+                if(advancedPreview!=null) { advancedPreview.Revision+=movementRevision; return advancedPreview; }
+            }
             return new MovementSettings
             {
-                Enabled = enabled,
+                Revision = movementRevision,
+                Trajectory = selectedPreset == null ? null : (secondaryActive ? selectedPreset.SecondaryTrajectory : selectedPreset.PrimaryTrajectory),
+                Enabled = enabled && !(AdvancedPage.Visibility==Visibility.Visible && AdvancedPage.IsDrawingOpen),
                 RequireRightButton = RequireRight.IsChecked == true,
                 HorizontalPixelsPerSecond = (int)(secondaryActive ? SecondaryHorizontalSlider.Value : PrimaryHorizontalSlider.Value),
                 VerticalPixelsPerSecond = (int)(secondaryActive ? SecondaryVerticalSlider.Value : PrimaryVerticalSlider.Value),
@@ -243,6 +252,7 @@ namespace MacroDoButler
                 preset.RequireRightButton = RequireRight.IsChecked == true;
                 backupService.CreateBackup();
                 organizationService.Save(presetService, preset);
+                movementRevision++;
                 selectedPreset = preset;
                 RefreshOrganization(preset);
                 ShowFeedback("Preset salvo com sucesso.", true);
@@ -375,6 +385,7 @@ namespace MacroDoButler
         }
         private void LoadPreset(Preset preset)
         {
+            movementRevision++;
             selectedPreset = preset;
             updatingSelectors = true;
             GameSelector.SelectedItem = preset.GameName;
@@ -445,7 +456,7 @@ namespace MacroDoButler
             ScrollViewer pane=sender as ScrollViewer;
             if(pane!=null){pane.ScrollToVerticalOffset(pane.VerticalOffset-e.Delta);e.Handled=true;}
         }
-        private static Preset ClonePreset(Preset p){return new Preset{GameName=p.GameName,CharacterName=p.CharacterName,WeaponName=p.WeaponName,WeaponSlot=p.WeaponSlot,Name=p.Name,PrimaryVertical=p.PrimaryVertical,PrimaryHorizontal=p.PrimaryHorizontal,SecondaryVertical=p.SecondaryVertical,SecondaryHorizontal=p.SecondaryHorizontal,IntervalMilliseconds=p.IntervalMilliseconds,SecondaryIntervalMilliseconds=p.SecondaryIntervalMilliseconds,RequireRightButton=p.RequireRightButton,CreatedAt=p.CreatedAt,UpdatedAt=p.UpdatedAt};}
+        private static Preset ClonePreset(Preset p){return new Preset{PrimaryTrajectory=Trajectory.Normalize(p.PrimaryTrajectory),SecondaryTrajectory=Trajectory.Normalize(p.SecondaryTrajectory),GameName=p.GameName,CharacterName=p.CharacterName,WeaponName=p.WeaponName,WeaponSlot=p.WeaponSlot,Name=p.Name,PrimaryVertical=p.PrimaryVertical,PrimaryHorizontal=p.PrimaryHorizontal,SecondaryVertical=p.SecondaryVertical,SecondaryHorizontal=p.SecondaryHorizontal,IntervalMilliseconds=p.IntervalMilliseconds,SecondaryIntervalMilliseconds=p.SecondaryIntervalMilliseconds,RequireRightButton=p.RequireRightButton,CreatedAt=p.CreatedAt,UpdatedAt=p.UpdatedAt};}
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -462,6 +473,7 @@ namespace MacroDoButler
                 case "SecondaryInterval": target = SecondaryIntervalText; break;
             }
             if (target != null) target.Text = ((int)slider.Value).ToString();
+            if(IsInitialized)UpdateMacroSummary();
 
         }
 
@@ -503,8 +515,8 @@ namespace MacroDoButler
             SecondaryIntervalText.Text = ((int)SecondaryIntervalSlider.Value).ToString();
         }
 
-        private void Toggle() { enabled = !enabled; RefreshLiveEditMovementSettings(); UpdateStatus(); AudioCueService.PlayMacroToggle(); }
-        private void ToggleWeapon() { secondaryActive = !secondaryActive; RefreshLiveEditMovementSettings(); UpdateWeaponStatus(); AudioCueService.PlayWeaponSwitch(); }
+        private void Toggle() { movementRevision++; enabled = !enabled; RefreshLiveEditMovementSettings(); UpdateStatus(); AudioCueService.PlayMacroToggle(); }
+        private void ToggleWeapon() { movementRevision++; secondaryActive = !secondaryActive; RefreshLiveEditMovementSettings(); UpdateWeaponStatus(); AudioCueService.PlayWeaponSwitch(); }
 
         private void UpdateStatus()
         {
@@ -513,6 +525,10 @@ namespace MacroDoButler
 
         private void UpdateMacroSummary()
         {
+            if(MovementSummary!=null && PrimaryHorizontalSlider!=null && SecondaryHorizontalSlider!=null)
+                MovementSummary.ShowSettings(selectedPreset,secondaryActive,enabled,
+                    (int)(secondaryActive?SecondaryHorizontalSlider.Value:PrimaryHorizontalSlider.Value),
+                    (int)(secondaryActive?SecondaryVerticalSlider.Value:PrimaryVerticalSlider.Value));
             bool primaryEnabled = enabled && !secondaryActive;
             bool secondaryEnabled = enabled && secondaryActive;
             SummaryPrimaryState.Text = primaryEnabled ? "Ativada" : "Desativada";
@@ -553,6 +569,19 @@ namespace MacroDoButler
         private void Minimize_Click(object sender, RoutedEventArgs e) { WindowState = WindowState.Minimized; }
         private void Close_Click(object sender, RoutedEventArgs e) { Close(); }
         private void PresetsNavigation_Click(object sender, RoutedEventArgs e) { SetSettingsPage(false); }
+        private void AdvancedNavigation_Click(object sender, RoutedEventArgs e)
+        {
+            if(AdvancedPage.Visibility==Visibility.Visible) { AdvancedNavigationButton.IsChecked=true; return; }
+            if(!ConfirmDiscardDraft()) { AdvancedNavigationButton.IsChecked=false; return; }
+            ClearPresetDraft(); movementRevision++;
+            bool initialSecondary=secondaryActive;
+            AdvancedPage.Configure(presetService,()=>backupService.CreateBackup(),p=> { bool testSecondary=secondaryActive; RefreshOrganization(p); secondaryActive=testSecondary; UpdateWeaponStatus(); movementRevision++; },selectedPreset);
+            AdvancedPage.SelectTestWeapon(initialSecondary);
+            MainPage.Visibility=SettingsPage.Visibility=EditorPage.Visibility=Visibility.Collapsed;
+            AdvancedPage.Visibility=Visibility.Visible;
+            PresetsNavigationButton.IsChecked=SettingsNavigationButton.IsChecked=false; AdvancedNavigationButton.IsChecked=true;
+            if(capturingAction!=null)CancelCapture();
+        }
         private void SettingsNavigation_Click(object sender, RoutedEventArgs e) { SetSettingsPage(true); }
         private void Settings_Click(object sender, RoutedEventArgs e)
         {
@@ -560,6 +589,10 @@ namespace MacroDoButler
         }
         private void SetSettingsPage(bool showSettings)
         {
+            if(AdvancedPage.Visibility==Visibility.Visible && !AdvancedPage.ConfirmDiscard())
+            { PresetsNavigationButton.IsChecked=SettingsNavigationButton.IsChecked=false; AdvancedNavigationButton.IsChecked=true; return; }
+            AdvancedPage.Visibility=Visibility.Collapsed;
+            AdvancedNavigationButton.IsChecked=false;
             if(EditorPage.Visibility==Visibility.Visible)
             {
                 if(!ConfirmDiscardDraft()) return;

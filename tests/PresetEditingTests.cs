@@ -15,10 +15,20 @@ internal static class PresetEditingTests
         string root = Path.Combine(Path.GetFullPath(args[0]), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var blank = new PresetEditDraft(new Preset { GameName="Game", Name="", IntervalMilliseconds=0, SecondaryIntervalMilliseconds=0 }, true);
-        Assert(blank.PrimaryVertical==0 && blank.PrimaryHorizontal==0 && blank.SecondaryVertical==0 && blank.SecondaryHorizontal==0 && blank.PrimaryInterval==0 && blank.SecondaryInterval==0, "New preset is not zeroed");
-        Assert(!blank.IsDirty && blank.MinimumInterval==0, "Blank draft state is invalid");
+        Assert(blank.PrimaryVertical==0 && blank.PrimaryHorizontal==0 && blank.SecondaryVertical==0 && blank.SecondaryHorizontal==0 && blank.PrimaryInterval==2 && blank.SecondaryInterval==2, "New preset must have zero movement and valid 2 ms intervals");
+        Assert(!blank.IsDirty && blank.MinimumInterval==2, "Blank draft state is invalid");
+        Reject(()=>blank.PrimaryInterval=0);
+        Reject(()=>blank.SecondaryInterval=0);
+        var invalidSecondary=new PresetEditDraft(new Preset { IntervalMilliseconds=7, SecondaryIntervalMilliseconds=0 });
+        Assert(invalidSecondary.SecondaryInterval==7,"Invalid secondary interval is not repaired in editor");
         var repository = new PresetService(root);
         repository.SaveGame("Game");
+        blank.Name="Empty";
+        PresetEditingService.Save(repository,null,blank.ToPreset(),()=>{});
+        var emptySaved=repository.LoadAll().Single(p=>p.Name=="Empty");
+        Assert(emptySaved.IntervalMilliseconds==2&&emptySaved.SecondaryIntervalMilliseconds==2&&emptySaved.PrimaryVertical==0&&emptySaved.SecondaryVertical==0,"Empty preset cannot be saved with valid defaults");
+        repository.Delete(emptySaved);
+
         repository.SaveByIdentity(Make("Original"));
         repository.SaveByIdentity(Make("Untouched"));
         var original = repository.LoadAll().Single(p=>p.Name=="Original");

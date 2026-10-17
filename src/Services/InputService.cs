@@ -17,22 +17,18 @@ internal sealed class InputService : IDisposable
 
     private void Run()
     {
-        double remainderX = 0, remainderY = 0;
+        var session = new MovementSession();
         var watch = Stopwatch.StartNew(); long previousTick = watch.ElapsedTicks;
         while (!stopping)
         {
             MovementSettings settings = SafeSettings();
-            Thread.Sleep(settings.IntervalMilliseconds);
+            Thread.Sleep(Math.Max(2, Math.Min(50, settings.IntervalMilliseconds)));
             long currentTick = watch.ElapsedTicks;
             double elapsed = (currentTick - previousTick) / (double)Stopwatch.Frequency;
             previousTick = currentTick;
-            bool moving = settings.Enabled && NativeMethods.IsKeyDown(NativeMethods.LeftMouseButton) && (!settings.RequireRightButton || NativeMethods.IsKeyDown(NativeMethods.RightMouseButton));
-            if (!moving) { remainderX = remainderY = 0; continue; }
-            remainderX += settings.HorizontalPixelsPerSecond * elapsed;
-            remainderY += settings.VerticalPixelsPerSecond * elapsed;
-            int x = (int)Math.Truncate(remainderX), y = (int)Math.Truncate(remainderY);
-            remainderX -= x; remainderY -= y;
-            if (x != 0 || y != 0) NativeMethods.MoveMouse(x, y);
+            var delta=session.Step(settings, NativeMethods.IsKeyDown(NativeMethods.LeftMouseButton), NativeMethods.IsKeyDown(NativeMethods.RightMouseButton), elapsed);
+            int x=(int)delta.Horizontal, y=(int)delta.Vertical;
+            if(x!=0||y!=0)NativeMethods.MoveMouse(x,y);
         }
     }
 
